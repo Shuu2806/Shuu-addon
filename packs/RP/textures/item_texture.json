@@ -1,0 +1,12 @@
+{
+	"resource_pack_name": "shuuaddon",
+	"texture_name": "atlas.items",
+	"texture_data": {
+		"shuuaddons:extra_life": {
+			"textures": "textures/items/extra_life"
+		},
+		"shuuaddons:revive": {
+			"textures": "textures/items/revive"
+		}
+	}
+}

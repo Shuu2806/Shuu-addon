@@ -1,0 +1,10 @@
+{
+  "name": "shuuaddon-scripts",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@minecraft/server": "^2.1.0",
+    "@minecraft/server-ui": "^2.0.0",
+    "typescript": "^5.7.0"
+  }
+}

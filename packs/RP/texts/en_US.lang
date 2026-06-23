@@ -1,0 +1,8 @@
+pack.name=Shuu2806's Addon
+pack.description=A Minecraft Bedrock Addon by Shuu2806
+
+item.shuuaddons:extra_life=Heart of Life
+item.shuuaddons:revive=Heart of Resurrection  
+item.shuuaddons:claim_tool=Claim Tool
+item.shuuaddons:shop_chest=Item Shop
+tile.shuuaddons:shop_chest.name=Item Shop

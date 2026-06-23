@@ -1,0 +1,61 @@
+{
+	"$schema": "https://raw.githubusercontent.com/Bedrock-OSS/regolith-schemas/main/config/unified.json",
+	"author": "Shuu2806",
+	"name": "Shuu2806's Addon",
+	"packs": {
+		"behaviorPack": "./packs/BP",
+		"resourcePack": "./packs/RP"
+	},
+	"regolith": {
+		"dataPath": "./packs/data",
+		"filterDefinitions": {
+			"esbuild": {
+				"url": "github.com/ink0rr/regolith-filters",
+				"version": "0.3.1"
+			},
+			"json_cleaner": {
+				"url": "github.com/Bedrock-OSS/regolith-filters",
+				"version": "2.0.2"
+			},
+			"subfunctions": {
+				"url": "github.com/Nusiq/regolith-filters",
+				"version": "2.1.2"
+			},
+			"templater": {
+				"url": "github.com/Hatchibombotar/useful-regolith-filters",
+				"version": "2.0.0"
+			},
+			"texture_list": {
+				"url": "github.com/Bedrock-OSS/regolith-filters",
+				"version": "1.1.3"
+			}
+		},
+		"formatVersion": "1.8.0",
+		"profiles": {
+			"default": {
+				"export": {
+					"build": "standard",
+					"readOnly": false,
+					"target": "development"
+				},
+				"filters": [
+					{
+						"filter": "templater"
+					},
+					{
+						"filter": "esbuild"
+					},
+					{
+						"filter": "subfunctions"
+					},
+					{
+						"filter": "texture_list"
+					},
+					{
+						"filter": "json_cleaner"
+					}
+				]
+			}
+		}
+	}
+}
