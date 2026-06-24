@@ -9,7 +9,7 @@ export type JobKey = "hunter" | "lumberjack" | "miner" | "fisher" | "farmer";
 
 export const JOB_META: Record<JobKey, { label: string; color: string; scoreId: string }> = {
   hunter:     { label: "Chasseur",  color: "§c", scoreId: "shu_hunter"     },
-  lumberjack: { label: "Bucheron",  color: "§2", scoreId: "shu_lumberjack" },
+  lumberjack: { label: "Bûcheron",  color: "§2", scoreId: "shu_lumberjack" },
   miner:      { label: "Mineur",    color: "§8", scoreId: "shu_miner"      },
   fisher:     { label: "Pêcheur",   color: "§b", scoreId: "shu_fisher"     },
   farmer:     { label: "Fermier",   color: "§a", scoreId: "shu_farmer"     },

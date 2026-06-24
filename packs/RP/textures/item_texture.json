@@ -7,6 +7,15 @@
 		},
 		"shuuaddons:revive": {
 			"textures": "textures/items/revive"
+		},
+		"shuuaddons:claim_tool": {
+			"textures": "textures/items/claim_tool"
+		},
+		"shuuaddons:admin_claim_tool": {
+			"textures": "textures/items/claim_tool"
+		},
+		"shuuaddons:shop_chest": {
+			"textures": "textures/items/shop_chest"
 		}
 	}
 }

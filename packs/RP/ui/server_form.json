@@ -54,6 +54,86 @@
                 }
             },
             {
+                "claims_main_form@server_form.claims_main_panel": {
+                    "bindings": [
+                        { "binding_name": "#title_text" },
+                        { "binding_type": "view", "source_property_name": "(not ((#title_text - '§8§1§a') = #title_text))", "target_property_name": "#visible" }
+                    ]
+                }
+            },
+            {
+                "claims_list_form@server_form.claims_list_panel": {
+                    "bindings": [
+                        { "binding_name": "#title_text" },
+                        { "binding_type": "view", "source_property_name": "(not ((#title_text - '§8§1§b') = #title_text))", "target_property_name": "#visible" }
+                    ]
+                }
+            },
+            {
+                "claims_editor_form@server_form.claims_editor_panel": {
+                    "bindings": [
+                        { "binding_name": "#title_text" },
+                        { "binding_type": "view", "source_property_name": "(not ((#title_text - '§8§1§c') = #title_text))", "target_property_name": "#visible" }
+                    ]
+                }
+            },
+            {
+                "claims_tp_form@server_form.claims_tp_panel": {
+                    "bindings": [
+                        { "binding_name": "#title_text" },
+                        { "binding_type": "view", "source_property_name": "(not ((#title_text - '§8§1§d') = #title_text))", "target_property_name": "#visible" }
+                    ]
+                }
+            },
+            {
+                "claims_members_form@server_form.claims_members_panel": {
+                    "bindings": [
+                        { "binding_name": "#title_text" },
+                        { "binding_type": "view", "source_property_name": "(not ((#title_text - '§8§1§e') = #title_text))", "target_property_name": "#visible" }
+                    ]
+                }
+            },
+            {
+                "claims_fx_form@server_form.claims_fx_panel": {
+                    "bindings": [
+                        { "binding_name": "#title_text" },
+                        { "binding_type": "view", "source_property_name": "(not ((#title_text - '§8§1§f') = #title_text))", "target_property_name": "#visible" }
+                    ]
+                }
+            },
+            {
+                "claims_fxshop_form@server_form.claims_fxshop_panel": {
+                    "bindings": [
+                        { "binding_name": "#title_text" },
+                        { "binding_type": "view", "source_property_name": "(not ((#title_text - '§8§1§g') = #title_text))", "target_property_name": "#visible" }
+                    ]
+                }
+            },
+            {
+                "claims_home_form@server_form.claims_home_panel": {
+                    "bindings": [
+                        { "binding_name": "#title_text" },
+                        { "binding_type": "view", "source_property_name": "(not ((#title_text - '§8§1§h') = #title_text))", "target_property_name": "#visible" }
+                    ]
+                }
+            },
+            {
+                "claims_bans_form@server_form.claims_bans_panel": {
+                    "bindings": [
+                        { "binding_name": "#title_text" },
+                        { "binding_type": "view", "source_property_name": "(not ((#title_text - '§8§1§i') = #title_text))", "target_property_name": "#visible" }
+                    ]
+                }
+            },
+            {
+                "claims_admin_form@server_form.claims_admin_panel": {
+                    "bindings": [
+                        { "binding_name": "#title_text" },
+                        { "binding_type": "view", "source_property_name": "(not ((#title_text - '§8§1§j') = #title_text))", "target_property_name": "#visible" }
+                    ]
+                }
+            },
+            {
                 "shop_main_form@server_form.shop_main_panel": {
                     "bindings": [
                         { "binding_name": "#title_text" },

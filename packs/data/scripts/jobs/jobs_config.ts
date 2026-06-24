@@ -78,7 +78,6 @@ export const JOBS_CONFIG: JobsConfig = {
       "minecraft:dark_oak_log": { label: "Bûche de Chêne Noir", xp: 5, nc: 0.5 },
       "minecraft:mangrove_log": { label: "Bûche de Mangrove",   xp: 6, nc: 0.7 },
       "minecraft:cherry_log":   { label: "Bûche de Cerisier",   xp: 6, nc: 0.7 },
-      "minecraft:bamboo_block": { label: "Bloc de Bambou",      xp: 3, nc: 0.1 },
       "minecraft:crimson_stem": { label: "Tige Cramoisie",      xp: 7, nc: 1   },
       "minecraft:warped_stem":  { label: "Tige Déformée",       xp: 7, nc: 1   },
     },

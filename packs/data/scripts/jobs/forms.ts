@@ -65,6 +65,10 @@ export async function showJobMenu(player: Player): Promise<void> {
   }
 
   form.button(HIDDEN_BTN, "");
+  form.button(HIDDEN_BTN, "");
+  form.button(HIDDEN_BTN, "");
+  form.button(HIDDEN_BTN, "");
+  form.button(HIDDEN_BTN, "");
 
   const response = await showFormWithRetry(form, player);
   if (response.canceled || response.selection === undefined) return;
@@ -226,6 +230,11 @@ export async function showAddJob(player: Player): Promise<void> {
   for (let i = 0; i < JOB_SLOT_COUNT - available.length +1; i++){
     form.button(HIDDEN_BTN, "");
   }
+
+  form.button(HIDDEN_BTN, "");
+  form.button(HIDDEN_BTN, "");
+  form.button(HIDDEN_BTN, "");
+  form.button(HIDDEN_BTN, "");
 
   const response = await showFormWithRetry(form, player);
   if (response.canceled || response.selection === undefined || response.selection >= available.length) return;

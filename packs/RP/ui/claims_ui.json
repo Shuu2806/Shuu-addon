@@ -1,0 +1,764 @@
+{
+    "namespace": "server_form",
+
+    "claims_slot_combined": {
+        "type": "panel",
+        "size": ["50%", "100%"],
+        "bindings": [
+            { "binding_name": "#form_button_text", "binding_type": "collection", "binding_collection_name": "form_buttons" },
+            { "binding_type": "view", "source_property_name": "((#form_button_text - '§0§0§0') = #form_button_text)", "target_property_name": "#visible" }
+        ],
+        "controls": [
+            {
+                "state_active": {
+                    "type": "panel",
+                    "size": ["100%", "100%"],
+                    "controls": [
+                        { "click@server_form.sa_btn_core": {} },
+                        { "icon@server_form.sa_btn_icon": { "size": [22, 22], "anchor_from": "top_middle", "anchor_to": "top_middle", "offset": [0, 4] } },
+                        { "lbl@server_form.sa_btn_lbl": { "anchor_from": "bottom_middle", "anchor_to": "bottom_middle", "offset": [0, -4] } }
+                    ],
+                    "bindings": [
+                        { "binding_name": "#form_button_text", "binding_type": "collection", "binding_collection_name": "form_buttons" },
+                        { "binding_type": "view", "source_property_name": "(not ((#form_button_text - 'chunk') = #form_button_text))", "target_property_name": "#visible" }
+                    ]
+                }
+            },
+            {
+                "state_normal": {
+                    "type": "panel",
+                    "size": ["100%", "100%"],
+                    "controls": [
+                        { "click@server_form.sa_btn_core": {} },
+                        { "icon@server_form.sa_btn_icon": { "size": [22, 22], "anchor_from": "top_middle", "anchor_to": "top_middle", "offset": [0, 4] } },
+                        { "lbl@server_form.sa_btn_lbl": { "anchor_from": "bottom_middle", "anchor_to": "bottom_middle", "offset": [0, -4] } }
+                    ],
+                    "bindings": [
+                        { "binding_name": "#form_button_text", "binding_type": "collection", "binding_collection_name": "form_buttons" },
+                        { "binding_type": "view", "source_property_name": "((#form_button_text - 'chunk') = #form_button_text)", "target_property_name": "#visible" }
+                    ]
+                }
+            }
+        ]
+    },
+
+    "claims_slot": {
+        "type": "panel",
+        "size": ["50%", "100%"],
+        "collection_name": "form_buttons",
+        "controls": [
+            { "click@server_form.sa_btn_core": {} },
+            { "icon@server_form.sa_btn_icon": { "anchor_from": "top_middle", "anchor_to": "top_middle", "offset": [0, 4] } },
+            { "lbl@server_form.sa_btn_lbl": { "anchor_from": "bottom_middle", "anchor_to": "bottom_middle", "offset": [0, -4] } }
+        ]
+    },
+
+
+    "claims_main_big_btn": {
+        "type": "panel",
+        "size": ["60%", "100%"],
+        "collection_name": "form_buttons",
+        "controls": [
+            { "click@server_form.sa_btn_core": {} },
+            { "icon@server_form.sa_btn_icon": { "size": [36, 36], "anchor_from": "center", "anchor_to": "center", "offset": [0, -16] } },
+            { "lbl@server_form.sa_btn_lbl": { "anchor_from": "center", "anchor_to": "center", "offset": [0, 16] } }
+        ]
+    },
+
+    "claims_side_btn": {
+        "type": "panel",
+        "size": ["100%", "100%"],
+        "collection_name": "form_buttons",
+        "controls": [
+            { "click@server_form.sa_btn_core": {} },
+            { "icon@server_form.sa_btn_icon": { "size": [22, 22], "anchor_from": "center", "anchor_to": "center", "offset": [0, -12] } },
+            { "lbl@server_form.sa_btn_lbl": { "anchor_from": "center", "anchor_to": "center", "offset": [0, 12] } }
+        ]
+    },
+
+    "claims_fx_slot": {
+        "type": "panel",
+        "size": ["50%", "100%"],
+        "collection_name": "form_buttons",
+        "bindings": [
+            { "binding_name": "#form_button_text", "binding_type": "collection", "binding_collection_name": "form_buttons" },
+            { "binding_type": "view", "source_property_name": "((#form_button_text - '§0§0§0') = #form_button_text)", "target_property_name": "#visible" }
+        ],
+        "controls": [
+            { "click@server_form.sa_btn_core": {} },
+            { "icon@server_form.sa_btn_icon": { "size": [24, 24], "anchor_from": "top_middle", "anchor_to": "top_middle", "offset": [0, 5] } },
+            { "lbl@server_form.sa_btn_lbl": { "anchor_from": "bottom_middle", "anchor_to": "bottom_middle", "offset": [0, -5] } }
+        ]
+    },
+
+    "claims_btn_grid": {
+        "type": "panel",
+        "size": ["50%", "100%"],
+        "collection_name": "form_buttons",
+        "controls": [
+            { "click@server_form.sa_btn_core": {} },
+            { "icon@server_form.sa_btn_icon": { "anchor_from": "top_middle", "anchor_to": "top_middle", "offset": [0, 4] } },
+            { "lbl@server_form.sa_btn_lbl": { "anchor_from": "bottom_middle", "anchor_to": "bottom_middle", "offset": [0, -4] } }
+        ]
+    },
+
+    "claims_btn_wide": {
+        "type": "panel",
+        "size": ["100%", "100%"],
+        "collection_name": "form_buttons",
+        "controls": [
+            { "click@server_form.sa_btn_core": {} },
+            { "icon@server_form.sa_btn_icon": { "anchor_from": "center_left", "anchor_to": "center_left", "offset": [-30, 0] } },
+            { "lbl@server_form.sa_btn_lbl": { "anchor_from": "center", "anchor_to": "center" } }
+        ]
+    },
+
+    "claims_btn_action": {
+        "type": "panel",
+        "size": ["65%", "100%"],
+        "collection_name": "form_buttons",
+        "controls": [
+            { "click@server_form.sa_btn_core": {} },
+            { "icon@server_form.sa_btn_icon": { "anchor_from": "center_left", "anchor_to": "center_left", "offset": [-30, 0] } },
+            { "lbl@server_form.sa_btn_lbl": { "anchor_from": "center", "anchor_to": "center", "offset": [20, 0] } }
+        ]
+    },
+
+    "claims_btn_return": {
+        "type": "panel",
+        "size": ["35%", "100%"],
+        "collection_name": "form_buttons",
+        "controls": [
+            { "click@server_form.sa_btn_core": {} },
+            { "icon@server_form.sa_btn_icon": { "anchor_from": "center_left", "anchor_to": "center_left", "offset": [-15, 0] } },
+            { "lbl@server_form.sa_btn_lbl": { "anchor_from": "center", "anchor_to": "center", "offset": [10, 0] } }
+        ]
+    },
+
+    "claims_btn_return_center": {
+        "type": "panel",
+        "size": ["35%", "100%"],
+        "collection_name": "form_buttons",
+        "controls": [
+            { "click@server_form.sa_btn_core": {} },
+            { "icon@server_form.sa_btn_icon": { "anchor_from": "center", "anchor_to": "center", "offset": [0, -8] } },
+            { "lbl@server_form.sa_btn_lbl": { "anchor_from": "bottom_middle", "anchor_to": "bottom_middle", "offset": [0, -4] } }
+        ]
+    },
+
+    "claims_main_panel": {
+        "type": "panel",
+        "focus_container": true,
+        "size": [280, 200],
+        "layer": 2,
+        "controls": [
+            { "shell@server_form.sa_page_shell": {} },
+            { "bal@server_form.sa_balance_box": { "size": ["100% - 16px", 32], "offset": [0, 32] } },
+            {
+                "main": {
+                    "type": "stack_panel",
+                    "orientation": "horizontal",
+                    "size": ["100% - 16px", 120],
+                    "offset": [0, -8],
+                    "anchor_from": "bottom_middle",
+                    "anchor_to": "bottom_middle",
+                    "collection_name": "form_buttons",
+                    "controls": [
+                        { "left@server_form.claims_main_big_btn": { "collection_index": 0 } },
+                        {
+                            "right": {
+                                "type": "stack_panel",
+                                "orientation": "vertical",
+                                "size": ["40%", "100%"],
+                                "collection_name": "form_buttons",
+                                "controls": [
+                                    { "b1@server_form.claims_side_btn": { "collection_index": 1, "size": ["100%", "48%"] } },
+                                    { "gap": { "type": "panel", "size": ["100%", "4%"] } },
+                                    { "b2@server_form.claims_side_btn": { "collection_index": 2, "size": ["100%", "48%"] } }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+
+    "claims_list_panel": {
+        "type": "panel",
+        "focus_container": true,
+        "size": [280, 223],
+        "layer": 2,
+        "controls": [
+            { "shell@server_form.sa_page_shell": {} },
+            { "bal@server_form.sa_balance_box": { "size": ["100% - 16px", 28], "offset": [0, 32] } },
+            {
+                "slots_area": {
+                    "type": "stack_panel",
+                    "orientation": "vertical",
+                    "size": ["100% - 16px", 152],
+                    "offset": [0, 66],
+                    "anchor_from": "top_middle",
+                    "anchor_to": "top_middle",
+                    "collection_name": "form_buttons",
+                    "controls": [
+                        {
+                            "row1": {
+                                "type": "stack_panel",
+                                "orientation": "horizontal",
+                                "size": ["100%", 48],
+                                "collection_name": "form_buttons",
+                                "controls": [
+                                    { "s0@server_form.claims_slot_combined": { "collection_index": 0 } },
+                                    { "s1@server_form.claims_slot_combined": { "collection_index": 1 } }
+                                ]
+                            }
+                        },
+                        { "gap1": { "type": "panel", "size": ["100%", 4] } },
+                        {
+                            "row2": {
+                                "type": "stack_panel",
+                                "orientation": "horizontal",
+                                "size": ["100%", 48],
+                                "collection_name": "form_buttons",
+                                "controls": [
+                                    { "s2@server_form.claims_slot_combined": { "collection_index": 2 } },
+                                    { "s3@server_form.claims_slot_combined": { "collection_index": 3 } }
+                                ]
+                            }
+                        },
+                        { "gap2": { "type": "panel", "size": ["100%", 4] } },
+                        {
+                            "row3": {
+                                "type": "stack_panel",
+                                "orientation": "horizontal",
+                                "size": ["100%", 48],
+                                "collection_name": "form_buttons",
+                                "controls": [
+                                    { "s4@server_form.claims_slot_combined": { "collection_index": 4 } }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+
+    "claims_editor_panel": {
+        "type": "panel",
+        "focus_container": true,
+        "size": [300, 255],
+        "layer": 2,
+        "controls": [
+            { "shell@server_form.sa_page_shell": {} },
+            { "body_box@server_form.sa_info_box": { "size": ["100% - 16px", 36], "offset": [0, 32] } },
+            {
+                "btns": {
+                    "type": "stack_panel",
+                    "orientation": "vertical",
+                    "size": ["100% - 16px", "100% - 80px"],
+                    "offset": [0, -6],
+                    "anchor_from": "bottom_middle",
+                    "anchor_to": "bottom_middle",
+                    "collection_name": "form_buttons",
+                    "controls": [
+                        {
+                            "row_wide": {
+                                "type": "stack_panel",
+                                "orientation": "horizontal",
+                                "size": ["100%", 40],
+                                "collection_name": "form_buttons",
+                                "controls": [
+                                    { "b0@server_form.claims_btn_wide": { "collection_index": 0 } }
+                                ]
+                            }
+                        },
+                        {
+                            "row2": {
+                                "type": "stack_panel",
+                                "orientation": "horizontal",
+                                "size": ["100%", 44],
+                                "collection_name": "form_buttons",
+                                "controls": [
+                                    { "b1@server_form.claims_btn_grid": { "collection_index": 1 } },
+                                    { "b2@server_form.claims_btn_grid": { "collection_index": 2 } }
+                                ]
+                            }
+                        },
+                        {
+                            "row3": {
+                                "type": "stack_panel",
+                                "orientation": "horizontal",
+                                "size": ["100%", 44],
+                                "collection_name": "form_buttons",
+                                "controls": [
+                                    { "b3@server_form.claims_btn_grid": { "collection_index": 3 } },
+                                    { "b4@server_form.claims_btn_grid": { "collection_index": 4 } }
+                                ]
+                            }
+                        },
+                        {
+                            "row4": {
+                                "type": "stack_panel",
+                                "orientation": "horizontal",
+                                "size": ["100%", 44],
+                                "collection_name": "form_buttons",
+                                "controls": [
+                                    { "b5@server_form.claims_btn_grid": { "collection_index": 5 } },
+                                    { "b6@server_form.claims_btn_grid": { "collection_index": 6 } }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+
+    "claims_tp_panel": {
+        "type": "panel",
+        "focus_container": true,
+        "size": [280, 202],
+        "layer": 2,
+        "controls": [
+            { "shell@server_form.sa_page_shell": {} },
+            { "body_box@server_form.sa_info_box": { "size": ["100% - 16px", 52], "offset": [0, 32] } },
+            {
+                "grid": {
+                    "type": "stack_panel",
+                    "orientation": "vertical",
+                    "size": ["100% - 16px", 108],
+                    "offset": [0, -6],
+                    "anchor_from": "bottom_middle",
+                    "anchor_to": "bottom_middle",
+                    "collection_name": "form_buttons",
+                    "controls": [
+                        {
+                            "row1": {
+                                "type": "stack_panel",
+                                "orientation": "horizontal",
+                                "size": ["100%", 52],
+                                "collection_name": "form_buttons",
+                                "controls": [
+                                    { "b0@server_form.claims_fx_slot": { "collection_index": 0 } },
+                                    { "b1@server_form.claims_fx_slot": { "collection_index": 1 } }
+                                ]
+                            }
+                        },
+                        { "gap": { "type": "panel", "size": ["100%", 4] } },
+                        {
+                            "row2": {
+                                "type": "stack_panel",
+                                "orientation": "horizontal",
+                                "size": ["100%", 52],
+                                "collection_name": "form_buttons",
+                                "controls": [
+                                    { "b2@server_form.claims_fx_slot": { "collection_index": 2 } },
+                                    { "b3@server_form.claims_fx_slot": { "collection_index": 3 } }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+
+    "claims_members_panel": {
+        "type": "panel",
+        "focus_container": true,
+        "size": [280, 200],
+        "layer": 2,
+        "controls": [
+            { "shell@server_form.sa_page_shell": {} },
+            { "body_box@server_form.sa_info_box": { "size": ["100% - 16px", 48], "offset": [0, 32] } },
+            {
+                "btns": {
+                    "type": "stack_panel",
+                    "orientation": "horizontal",
+                    "size": ["100% - 16px", 52],
+                    "offset": [0, -6],
+                    "anchor_from": "bottom_middle",
+                    "anchor_to": "bottom_middle",
+                    "collection_name": "form_buttons",
+                    "controls": [
+                        { "b0@server_form.claims_btn_action": { "collection_index": 0 } },
+                        { "b1@server_form.claims_btn_return": { "collection_index": 1 } }
+                    ]
+                }
+            },
+            {
+                "upgrade_row": {
+                    "type": "stack_panel",
+                    "orientation": "horizontal",
+                    "size": ["100% - 16px", 40],
+                    "offset": [0, -64],
+                    "anchor_from": "bottom_middle",
+                    "anchor_to": "bottom_middle",
+                    "collection_name": "form_buttons",
+                    "controls": [
+                        { "b2@server_form.claims_btn_wide": { "collection_index": 2 } }
+                    ]
+                }
+            }
+        ]
+    },
+
+    "claims_fx_panel": {
+        "type": "panel",
+        "focus_container": true,
+        "size": [300, 240],
+        "layer": 2,
+        "controls": [
+            { "shell@server_form.sa_page_shell": {} },
+            {
+                "header_row": {
+                    "type": "stack_panel",
+                    "orientation": "horizontal",
+                    "size": ["100% - 16px", 38],
+                    "offset": [0, 32],
+                    "anchor_from": "top_middle",
+                    "anchor_to": "top_middle",
+                    "collection_name": "form_buttons",
+                    "controls": [
+                        { "shop@server_form.claims_btn_action": { "collection_index": 0 } },
+                        { "ret@server_form.claims_btn_return": { "collection_index": 1 } }
+                    ]
+                }
+            },
+            {
+                "body_lbl": {
+                    "type": "label",
+                    "text": "#form_text",
+                    "color": [1, 1, 1],
+                    "font_size": "small",
+                    "text_alignment": "center",
+                    "offset": [0, 76],
+                    "anchor_from": "top_middle",
+                    "anchor_to": "top_middle",
+                    "layer": 4,
+                    "bindings": [{ "binding_name": "#form_text" }]
+                }
+            },
+            {
+                "grid": {
+                    "type": "stack_panel",
+                    "orientation": "vertical",
+                    "size": ["100% - 16px", 162],
+                    "offset": [0, -8],
+                    "anchor_from": "bottom_middle",
+                    "anchor_to": "bottom_middle",
+                    "collection_name": "form_buttons",
+                    "controls": [
+                        {
+                            "row1": {
+                                "type": "stack_panel",
+                                "orientation": "horizontal",
+                                "size": ["100%", 50],
+                                "collection_name": "form_buttons",
+                                "controls": [
+                                    { "e0@server_form.claims_fx_slot": { "collection_index": 2 } },
+                                    { "e1@server_form.claims_fx_slot": { "collection_index": 3 } }
+                                ]
+                            }
+                        },
+                        { "gap1": { "type": "panel", "size": ["100%", 4] } },
+                        {
+                            "row2": {
+                                "type": "stack_panel",
+                                "orientation": "horizontal",
+                                "size": ["100%", 50],
+                                "collection_name": "form_buttons",
+                                "controls": [
+                                    { "e2@server_form.claims_fx_slot": { "collection_index": 4 } },
+                                    { "e3@server_form.claims_fx_slot": { "collection_index": 5 } }
+                                ]
+                            }
+                        },
+                        { "gap2": { "type": "panel", "size": ["100%", 4] } },
+                        {
+                            "row3": {
+                                "type": "stack_panel",
+                                "orientation": "horizontal",
+                                "size": ["100%", 50],
+                                "collection_name": "form_buttons",
+                                "controls": [
+                                    { "e4@server_form.claims_fx_slot": { "collection_index": 6 } },
+                                    { "e5@server_form.claims_fx_slot": { "collection_index": 7 } }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+
+    "claims_fxshop_panel": {
+        "type": "panel",
+        "focus_container": true,
+        "size": [300, 240],
+        "layer": 2,
+        "controls": [
+            { "shell@server_form.sa_page_shell": {} },
+            {
+                "header_row": {
+                    "type": "stack_panel",
+                    "orientation": "horizontal",
+                    "size": ["100% - 16px", 38],
+                    "offset": [0, 32],
+                    "anchor_from": "top_middle",
+                    "anchor_to": "top_middle",
+                    "collection_name": "form_buttons",
+                    "controls": [
+                        {
+                            "bal": {
+                                "type": "panel",
+                                "size": ["65%", "100%"],
+                                "controls": [
+                                    { "bg@server_form.sa_bg_element": { "size": ["100% - 3px", "100% - 3px"] } },
+                                    {
+                                        "lbl": {
+                                            "type": "label",
+                                            "text": "#form_text",
+                                            "color": [1, 1, 1],
+                                            "font_size": "normal",
+                                            "text_alignment": "center",
+                                            "anchor_from": "center",
+                                            "anchor_to": "center",
+                                            "layer": 4,
+                                            "bindings": [{ "binding_name": "#form_text" }]
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        { "ret@server_form.claims_btn_return": { "collection_index": 0 } }
+                    ]
+                }
+            },
+            {
+                "grid": {
+                    "type": "stack_panel",
+                    "orientation": "vertical",
+                    "size": ["100% - 16px", 162],
+                    "offset": [0, -8],
+                    "anchor_from": "bottom_middle",
+                    "anchor_to": "bottom_middle",
+                    "collection_name": "form_buttons",
+                    "controls": [
+                        {
+                            "row1": {
+                                "type": "stack_panel",
+                                "orientation": "horizontal",
+                                "size": ["100%", 50],
+                                "collection_name": "form_buttons",
+                                "controls": [
+                                    { "e0@server_form.claims_fx_slot": { "collection_index": 1 } },
+                                    { "e1@server_form.claims_fx_slot": { "collection_index": 2 } }
+                                ]
+                            }
+                        },
+                        { "gap1": { "type": "panel", "size": ["100%", 4] } },
+                        {
+                            "row2": {
+                                "type": "stack_panel",
+                                "orientation": "horizontal",
+                                "size": ["100%", 50],
+                                "collection_name": "form_buttons",
+                                "controls": [
+                                    { "e2@server_form.claims_fx_slot": { "collection_index": 3 } },
+                                    { "e3@server_form.claims_fx_slot": { "collection_index": 4 } }
+                                ]
+                            }
+                        },
+                        { "gap2": { "type": "panel", "size": ["100%", 4] } },
+                        {
+                            "row3": {
+                                "type": "stack_panel",
+                                "orientation": "horizontal",
+                                "size": ["100%", 50],
+                                "collection_name": "form_buttons",
+                                "controls": [
+                                    { "e4@server_form.claims_fx_slot": { "collection_index": 5 } },
+                                    { "e5@server_form.claims_fx_slot": { "collection_index": 6 } }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+
+    "claims_admin_panel": {
+        "type": "panel",
+        "focus_container": true,
+        "size": [280, 172],
+        "layer": 2,
+        "controls": [
+            { "shell@server_form.sa_page_shell": {} },
+            { "body_box@server_form.sa_info_box": { "size": ["100% - 16px", 52], "offset": [0, 32] } },
+            {
+                "btns": {
+                    "type": "stack_panel",
+                    "orientation": "horizontal",
+                    "size": ["100% - 16px", 54],
+                    "offset": [0, -6],
+                    "anchor_from": "bottom_middle",
+                    "anchor_to": "bottom_middle",
+                    "collection_name": "form_buttons",
+                    "controls": [
+                        { "b0@server_form.claims_btn_action": { "collection_index": 0 } },
+                        { "b1@server_form.claims_btn_return": { "collection_index": 1 } }
+                    ]
+                }
+            }
+        ]
+    },
+
+    "claims_bans_panel": {
+        "type": "panel",
+        "focus_container": true,
+        "size": [280, 185],
+        "layer": 2,
+        "controls": [
+            { "shell@server_form.sa_page_shell": {} },
+            { "body_box@server_form.sa_info_box": { "size": ["100% - 16px", 44], "offset": [0, 32] } },
+            {
+                "btns": {
+                    "type": "stack_panel",
+                    "orientation": "vertical",
+                    "size": ["100% - 16px", 101],
+                    "offset": [0, -6],
+                    "anchor_from": "bottom_middle",
+                    "anchor_to": "bottom_middle",
+                    "collection_name": "form_buttons",
+                    "controls": [
+                        {
+                            "row1": {
+                                "type": "stack_panel",
+                                "orientation": "horizontal",
+                                "size": ["100%", 58],
+                                "collection_name": "form_buttons",
+                                "controls": [
+                                    { "b0@server_form.claims_btn_grid": { "collection_index": 0 } },
+                                    { "b1@server_form.claims_btn_grid": { "collection_index": 1 } }
+                                ]
+                            }
+                        },
+                        { "gap": { "type": "panel", "size": ["100%", 4] } },
+                        {
+                            "row2": {
+                                "type": "stack_panel",
+                                "orientation": "horizontal",
+                                "size": ["100%", 39],
+                                "collection_name": "form_buttons",
+                                "controls": [
+                                    { "b2@server_form.claims_btn_wide": { "collection_index": 2 } }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+
+    "claims_home_panel": {
+        "type": "panel",
+        "focus_container": true,
+        "size": [300, 240],
+        "layer": 2,
+        "controls": [
+            { "shell@server_form.sa_page_shell": {} },
+            {
+                "header_row": {
+                    "type": "stack_panel",
+                    "orientation": "horizontal",
+                    "size": ["100% - 16px", 38],
+                    "offset": [0, 32],
+                    "anchor_from": "top_middle",
+                    "anchor_to": "top_middle",
+                    "collection_name": "form_buttons",
+                    "controls": [
+                        {
+                            "bal": {
+                                "type": "panel",
+                                "size": ["65%", "100%"],
+                                "controls": [
+                                    { "bg@server_form.sa_bg_element": { "size": ["100% - 3px", "100% - 3px"] } },
+                                    {
+                                        "lbl": {
+                                            "type": "label",
+                                            "text": "#form_text",
+                                            "color": [1, 1, 1],
+                                            "font_size": "normal",
+                                            "text_alignment": "center",
+                                            "anchor_from": "center",
+                                            "anchor_to": "center",
+                                            "layer": 4,
+                                            "bindings": [{ "binding_name": "#form_text" }]
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        { "ret@server_form.claims_btn_return": { "collection_index": 0 } }
+                    ]
+                }
+            },
+            {
+                "grid": {
+                    "type": "stack_panel",
+                    "orientation": "vertical",
+                    "size": ["100% - 16px", 162],
+                    "offset": [0, -8],
+                    "anchor_from": "bottom_middle",
+                    "anchor_to": "bottom_middle",
+                    "collection_name": "form_buttons",
+                    "controls": [
+                        {
+                            "row1": {
+                                "type": "stack_panel",
+                                "orientation": "horizontal",
+                                "size": ["100%", 50],
+                                "collection_name": "form_buttons",
+                                "controls": [
+                                    { "c0@server_form.claims_fx_slot": { "collection_index": 1 } },
+                                    { "c1@server_form.claims_fx_slot": { "collection_index": 2 } }
+                                ]
+                            }
+                        },
+                        { "gap1": { "type": "panel", "size": ["100%", 4] } },
+                        {
+                            "row2": {
+                                "type": "stack_panel",
+                                "orientation": "horizontal",
+                                "size": ["100%", 50],
+                                "collection_name": "form_buttons",
+                                "controls": [
+                                    { "c2@server_form.claims_fx_slot": { "collection_index": 3 } },
+                                    { "c3@server_form.claims_fx_slot": { "collection_index": 4 } }
+                                ]
+                            }
+                        },
+                        { "gap2": { "type": "panel", "size": ["100%", 4] } },
+                        {
+                            "row3": {
+                                "type": "stack_panel",
+                                "orientation": "horizontal",
+                                "size": ["100%", 50],
+                                "collection_name": "form_buttons",
+                                "controls": [
+                                    { "c4@server_form.claims_fx_slot": { "collection_index": 5 } }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}
