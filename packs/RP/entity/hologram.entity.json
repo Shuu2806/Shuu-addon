@@ -1,0 +1,12 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:client_entity": {
+		"description": {
+			"identifier": "shuuaddons:hologram",
+			"materials": { "default": "entity_alphatest" },
+			"textures": { "default": "textures/entity/bat" },
+			"geometry": { "default": "geometry.bat" },
+			"render_controllers": ["controller.render.default"]
+		}
+	}
+}

@@ -11,7 +11,7 @@ import {
   resolveJob, type JobKey,
 } from "./constants.ts";
 import {
-  getJobData, setJobData, getJobEntry,
+  getJobData, setJobData,
   getCustomRewardsMap, setCustomRewardsMap,
   getCustomUpgradesMap, getEffectiveUpgrades,
   updateScoreboard, ensureObjectives,
