@@ -1,0 +1,47 @@
+{
+	"format_version": "1.20.80",
+	"minecraft:entity": {
+		"description": {
+			"identifier": "shuuaddons:shop_display",
+			"is_spawnable": false,
+			"is_summonable": true,
+			"is_experimental": false
+		},
+		"components": {
+			"minecraft:nameable": {
+				"allow_name_tag_renaming": false,
+				"always_show": true
+			},
+			"minecraft:damage_sensor": {
+				"triggers": [{ "cause": "all", "deals_damage": false }]
+			},
+			"minecraft:physics": {
+				"has_gravity": false,
+				"has_collision": false
+			},
+			"minecraft:collision_box": {
+				"width": 0.5,
+				"height": 1.7
+			},
+			"minecraft:pushable": {
+				"is_pushable": false,
+				"is_pushable_by_piston": false
+			},
+			"minecraft:custom_hit_test": {
+				"hitboxes": [
+					{ "width": 1, "height": 1, "pivot": [0, 0.6, 0] },
+					{ "width": 1, "height": 1, "pivot": [0, 1.3, 0] }
+				]
+			},
+			"minecraft:fire_immune": true,
+			"minecraft:health": { "max": 100, "min": 100, "value": 100 },
+			"minecraft:knockback_resistance": { "value": 9999 },
+			"minecraft:inventory": {
+				"container_type": "inventory",
+				"inventory_size": 200,
+				"private": true
+			}
+		},
+		"events": {}
+	}
+}

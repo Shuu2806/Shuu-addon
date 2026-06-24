@@ -236,7 +236,6 @@
     "vanilla_btn_item": {
         "type": "panel",
         "size": ["100%", 32],
-        "collection_name": "form_buttons",
         "bindings": [
             { "binding_name": "#form_button_text", "binding_type": "collection", "binding_collection_name": "form_buttons" },
             { "binding_type": "view", "source_property_name": "((#form_button_text - '§0§0§0') = #form_button_text)", "target_property_name": "#visible" }

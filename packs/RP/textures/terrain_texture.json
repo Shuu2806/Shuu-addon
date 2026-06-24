@@ -1,0 +1,10 @@
+{
+	"resource_pack_name": "shuuaddon",
+	"num_mip_levels": 4,
+	"padding": 8,
+	"texture_data": {
+		"shop_chest_side":   { "textures": "textures/blocks/shop_chest_side" },
+		"shop_chest_top":    { "textures": "textures/blocks/shop_chest_top" },
+		"shop_chest_bottom": { "textures": "textures/blocks/shop_chest_bottom" }
+	}
+}

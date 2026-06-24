@@ -1,0 +1,24 @@
+{
+	"format_version": "1.20.80",
+	"minecraft:client_entity": {
+		"description": {
+			"identifier": "shuuaddons:shop_display",
+			"materials": { "default": "entity_alphatest" },
+			"textures":  { "default": "textures/entity/shuu/shop_display" },
+			"geometry":  { "default": "geometry.itm_dis" },
+			"render_controllers": [ "controller.render.shuuaddons_shop_display" ],
+			"spawn_egg": { "base_color": "#8B6914", "overlay_color": "#FFD700" },
+			"animations": {
+				"move":   "animation.display.item_display",
+				"eqp_mv": "animation.bn_dis.arm_dis"
+			},
+			"scripts": {
+				"animate": [
+					{ "move":   "query.equipment_count == 0" },
+					{ "eqp_mv": "!query.equipment_count == 0" }
+				]
+			},
+			"enable_attachables": true
+		}
+	}
+}

@@ -5,3 +5,4 @@ import "./common/bundles.ts";
 import "./shop/shop.ts";
 import "./claims/claims.ts";
 import "./hologram/hologram.ts";
+import "./pshop/pshop.ts";
