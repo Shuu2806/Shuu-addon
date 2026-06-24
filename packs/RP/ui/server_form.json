@@ -22,10 +22,42 @@
                 }
             },
             {
+                "jobs_menu_form@server_form.jobs_menu_panel": {
+                    "bindings": [
+                        { "binding_name": "#title_text" },
+                        { "binding_type": "view", "source_property_name": "(not ((#title_text - '§3§1§a') = #title_text))", "target_property_name": "#visible" }
+                    ]
+                }
+            },
+            {
+                "jobs_detail_form@server_form.jobs_detail_panel": {
+                    "bindings": [
+                        { "binding_name": "#title_text" },
+                        { "binding_type": "view", "source_property_name": "(not ((#title_text - '§3§1§b') = #title_text))", "target_property_name": "#visible" }
+                    ]
+                }
+            },
+            {
+                "jobs_gains_form@server_form.jobs_gains_panel": {
+                    "bindings": [
+                        { "binding_name": "#title_text" },
+                        { "binding_type": "view", "source_property_name": "(not ((#title_text - '§3§1§c') = #title_text))", "target_property_name": "#visible" }
+                    ]
+                }
+            },
+            {
+                "jobs_list_form@server_form.jobs_list_panel": {
+                    "bindings": [
+                        { "binding_name": "#title_text" },
+                        { "binding_type": "view", "source_property_name": "(not ((#title_text - '§3§1§d') = #title_text))", "target_property_name": "#visible" }
+                    ]
+                }
+            },
+            {
                 "vanilla_fallback@server_form.vanilla_form_panel": {
                     "bindings": [
                         { "binding_name": "#title_text" },
-                        { "binding_type": "view", "source_property_name": "((#title_text - '§4§1') = #title_text)", "target_property_name": "#visible" }
+                        { "binding_type": "view", "source_property_name": "((#title_text - '§1') = #title_text)", "target_property_name": "#visible" }
                     ]
                 }
             }

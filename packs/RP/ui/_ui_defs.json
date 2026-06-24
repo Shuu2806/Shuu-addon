@@ -1,6 +1,7 @@
 {
     "ui_defs": [
         "ui/sa_common.json",
-        "ui/life_ui.json"
+        "ui/life_ui.json",
+        "ui/jobs_ui.json"
     ]
 }

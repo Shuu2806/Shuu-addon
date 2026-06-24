@@ -9,8 +9,9 @@ export async function showConfirmForm(
   message: string,
   title = "Confirmation"
 ): Promise<boolean> {
+  const sizeTag = title.length > 12 ? "§e§f" : "";
   const form = new ActionFormData()
-    .title(`§7§l${title}§r${CONFIRM_TAG}`)
+    .title(`${sizeTag}§7§l${title}§r${CONFIRM_TAG}`)
     .body(message)
     .button("§aConfirmer")
     .button("§cAnnuler");
