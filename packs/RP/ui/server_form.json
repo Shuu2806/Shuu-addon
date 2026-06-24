@@ -54,6 +54,38 @@
                 }
             },
             {
+                "shop_main_form@server_form.shop_main_panel": {
+                    "bindings": [
+                        { "binding_name": "#title_text" },
+                        { "binding_type": "view", "source_property_name": "(not ((#title_text - '§7§1§a') = #title_text))", "target_property_name": "#visible" }
+                    ]
+                }
+            },
+            {
+                "shop_item_form@server_form.shop_item_panel": {
+                    "bindings": [
+                        { "binding_name": "#title_text" },
+                        { "binding_type": "view", "source_property_name": "(not ((#title_text - '§7§1§b') = #title_text))", "target_property_name": "#visible" }
+                    ]
+                }
+            },
+            {
+                "cag_list_form@server_form.cag_list_panel": {
+                    "bindings": [
+                        { "binding_name": "#title_text" },
+                        { "binding_type": "view", "source_property_name": "(not ((#title_text - '§7§1§c') = #title_text))", "target_property_name": "#visible" }
+                    ]
+                }
+            },
+            {
+                "cag_detail_form@server_form.cag_detail_panel": {
+                    "bindings": [
+                        { "binding_name": "#title_text" },
+                        { "binding_type": "view", "source_property_name": "(not ((#title_text - '§7§1§d') = #title_text))", "target_property_name": "#visible" }
+                    ]
+                }
+            },
+            {
                 "vanilla_fallback@server_form.vanilla_form_panel": {
                     "bindings": [
                         { "binding_name": "#title_text" },
