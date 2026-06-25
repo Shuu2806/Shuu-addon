@@ -58,6 +58,8 @@
 
     "paths": {
       "~/*": ["./*"]
-    }
+    },
+    "jsx": "react-jsx",
+    "jsxImportSource": "@bedrock-core/ui"
   }
 }

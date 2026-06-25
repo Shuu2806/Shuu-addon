@@ -43,7 +43,11 @@
 						"filter": "templater"
 					},
 					{
-						"filter": "esbuild"
+						"filter": "esbuild",
+						"settings": {
+							"jsx": "automatic",
+							"jsxImportSource": "@bedrock-core/ui"
+						}
 					},
 					{
 						"filter": "subfunctions"

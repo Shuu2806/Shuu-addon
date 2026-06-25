@@ -6,5 +6,8 @@
     "@minecraft/server": "^2.1.0",
     "@minecraft/server-ui": "^2.0.0",
     "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "@bedrock-core/ui": "^0.7.0"
   }
 }
