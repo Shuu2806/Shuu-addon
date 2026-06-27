@@ -7,7 +7,7 @@ import {
 } from "@minecraft/server";
 import { fmtNC } from "~/common/economy.ts";
 import {
-  JOB_FR_NAMES, MAX_LEVEL,
+  JOB_FR_NAMES, JOB_META, ALL_JOBS, MAX_LEVEL,
   resolveJob, type JobKey,
 } from "./constants.ts";
 import {
@@ -16,6 +16,7 @@ import {
   getCustomUpgradesMap, getEffectiveUpgrades,
   updateScoreboard, ensureObjectives,
   getSalaryMinutes, fmtNcVal,
+  setJobBoost, getJobBoost,
   type JobCategory,
 } from "./helpers.ts";
 import { UPGRADES_CONFIG, type UpgradeEntry } from "./upgrades_config.ts";
@@ -364,6 +365,47 @@ system.beforeEvents.startup.subscribe((ev) => {
         delete map[jobKey];
         world.setDynamicProperty(CUSTOM_UPGRADES_KEY, JSON.stringify(map));
         admin?.sendMessage(`§aUpgrades de §f${metier} §aremis aux valeurs par défaut.`);
+      });
+      return { status: CustomCommandStatus.Success };
+    },
+  );
+});
+
+// ── /shuuaddons:setjobboost ───────────────────────────────────────────────────
+
+system.beforeEvents.startup.subscribe((ev) => {
+  ev.customCommandRegistry.registerCommand(
+    {
+      name: "shuuaddons:setjobboost",
+      description: "Définit le multiplicateur XP/NC d'un métier (1 = aucun boost, décimaux acceptés). Usage: <metier|all> <multiplicateur>",
+      permissionLevel: CommandPermissionLevel.GameDirectors,
+      cheatsRequired: true,
+      mandatoryParameters: [
+        { name: "metier",         type: CustomCommandParamType.String },
+        { name: "multiplicateur", type: CustomCommandParamType.String },
+      ],
+    },
+    (origin, metier: string, multiplicateurStr: string) => {
+      system.run(() => {
+        const admin = world.getAllPlayers().find((p) => p.id === origin.sourceEntity?.id);
+        const mult  = parseFloat(multiplicateurStr);
+        if (isNaN(mult) || mult < 1) { admin?.sendMessage("§cMultiplicateur invalide (minimum 1, décimaux acceptés)."); return; }
+
+        const targets: JobKey[] = metier.toLowerCase() === "all"
+          ? [...ALL_JOBS]
+          : (() => { const k = resolveJob(metier); return k ? [k] : []; })();
+
+        if (targets.length === 0) { admin?.sendMessage(`§cMétier inconnu. Valeurs : ${JOB_FR_NAMES}, all`); return; }
+
+        for (const job of targets) setJobBoost(job, mult, null);
+
+        const names = targets.map((j) => JOB_META[j].label).join(", ");
+        if (mult === 1) {
+          admin?.sendMessage(`§aBoost retiré pour : §f${names}§a.`);
+        } else {
+          admin?.sendMessage(`§aBoost §e×${mult} §aappliqué à : §f${names}§a (permanent).`);
+          world.sendMessage(`§d[Boost] §eLe métier §f${names} §eest boosté §d×${mult} §eXP & NC §f(permanent)§e !`);
+        }
       });
       return { status: CustomCommandStatus.Success };
     },

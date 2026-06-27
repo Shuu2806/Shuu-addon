@@ -713,11 +713,9 @@ function showEffectsShop(player: Player, group: ClaimGroup): void {
 system.runInterval(() => {
   const groups = getClaimGroups();
   for (const player of world.getAllPlayers()) {
-    if (player.hasTag("admin")) continue;
     const { cx, cz } = getChunk(player.location.x, player.location.z);
     const group = findGroupForChunk(cx, cz, groups);
     if (!group || !group.effects || group.effects.length === 0) continue;
-    if (!isAllowed(player.name, group)) continue;
     for (const eff of group.effects) {
       try { player.addEffect(`minecraft:${eff.id}`, 220, { amplifier: eff.level - 1, showParticles: false }); } catch (_) {}
     }

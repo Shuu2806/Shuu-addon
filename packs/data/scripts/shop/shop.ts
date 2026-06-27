@@ -3,6 +3,8 @@ import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 import { showFormWithRetry } from "~/common/form-utils.ts";
 import { getBalance, removeBalance, fmtNC } from "~/common/economy.ts";
 import { SHOP_CONFIG, type ShopConfigItem } from "./shop_config.ts";
+import { setJobBoost, addTopContributorBoosts } from "~/jobs/helpers.ts";
+import { ALL_JOBS, JOB_META } from "~/jobs/constants.ts";
 
 const SHOP_MAIN_TAG     = "§7§1§a";
 const SHOP_ITEM_TAG     = "§7§1§b";
@@ -26,7 +28,7 @@ interface Cagnotte {
   name: string;
   target: number;
   current: number;
-  type: "nether" | "end" | "event";
+  type: "nether" | "end" | "event" | "boost";
   eventName?: string;
   done: boolean;
   contributors: Record<string, number>;
@@ -177,6 +179,16 @@ async function showContributeModal(player: Player, cagnotte: Cagnotte): Promise<
       c.done = true;
       setCagnottes(list);
       world.sendMessage(`§6[Cagnotte] §a"${c.name}" §aatteinte ! §e${fmtNC(c.current)} §acollectés !`);
+
+      if (c.type === "boost") {
+        const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+        for (const job of ALL_JOBS) setJobBoost(job, 2, expiresAt);
+        const jobNames = ALL_JOBS.map((j) => JOB_META[j].color + JOB_META[j].label).join("§r, ");
+        world.sendMessage(`§d[Event Boost] §eTous les métiers (${jobNames}§e) sont boostés §d×2 §ependant §f24 heures §e!`);
+      } else {
+        addTopContributorBoosts(c.contributors ?? {});
+      }
+
       await showCagnottesMenu(player);
     } else {
       await showCagnotteDetail(player, c);
@@ -290,7 +302,7 @@ system.beforeEvents.startup.subscribe((ev) => {
     (origin, nom: string, objectif: number, type: string, evenement?: string) => {
       system.run(() => {
         const admin = world.getAllPlayers().find((p) => p.id === origin.sourceEntity?.id);
-        if (!["nether", "end", "event"].includes(type)) { admin?.sendMessage("§cType invalide. Utilisez : nether, end, event"); return; }
+        if (!["nether", "end", "event", "boost"].includes(type)) { admin?.sendMessage("§cType invalide. Utilisez : nether, end, event, boost"); return; }
         const list = getCagnottes();
         if (list.find((c) => c.name === nom)) { admin?.sendMessage(`§cCagnotte "${nom}" existe déjà.`); return; }
         list.push({ id: `${Date.now()}`, name: nom, target: objectif, current: 0, type: type as "nether" | "end" | "event", eventName: evenement, done: false, contributors: {} });
