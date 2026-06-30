@@ -66,14 +66,44 @@ export function updateScoreboard(player: Player, job: JobKey, level: number): vo
 export function syncAllScoreboards(player: Player): void {
   const data = getJobData(player);
   for (const job of ALL_JOBS) {
-    updateScoreboard(player, job, getJobEntry(data, job).lvl);
+    const lvl = getJobEntry(data, job).lvl;
+    updateScoreboard(player, job, lvl);
+    upsertTopPlayer(player.name, job, lvl);
   }
+}
+
+// ── Top players cache (world dynamic property) ────────────────────────────────
+
+const TOP_PLAYERS_KEY = "shuuaddons:topplayers";
+type TopPlayersData = Partial<Record<JobKey, Record<string, { name: string; lvl: number }>>>;
+
+function getTopPlayersData(): TopPlayersData {
+  const raw = world.getDynamicProperty(TOP_PLAYERS_KEY);
+  return typeof raw === "string" ? (JSON.parse(raw) as TopPlayersData) : {};
+}
+
+export function upsertTopPlayer(name: string, job: JobKey, lvl: number): void {
+  const data = getTopPlayersData();
+  if (!data[job]) data[job] = {};
+  if (lvl > 0) {
+    data[job]![name] = { name, lvl };
+  } else {
+    delete data[job]![name];
+  }
+  world.setDynamicProperty(TOP_PLAYERS_KEY, JSON.stringify(data));
+}
+
+export function getTop3Players(job: JobKey): { name: string; lvl: number }[] {
+  const data = getTopPlayersData()[job] ?? {};
+  return Object.values(data)
+    .sort((a, b) => b.lvl - a.lvl)
+    .slice(0, 3);
 }
 
 // ── XP / level ───────────────────────────────────────────────────────────────
 
 export function xpForLevel(n: number): number {
-  return Math.floor(1000 * Math.pow(n, 1.5));
+  return Math.floor(1000 * Math.pow(n, 1.4));
 }
 
 // ── Custom rewards ────────────────────────────────────────────────────────────
@@ -135,7 +165,7 @@ export function getBaseSalary(job: JobKey): number {
 }
 
 export function getSalaryAmount(job: JobKey, level: number): number {
-  return Math.floor(getBaseSalary(job) * Math.pow(1 + level / 100, 1.5));
+  return Math.floor(getBaseSalary(job) * Math.pow(1 + level / 25, 1.3));
 }
 
 // ── Default reward ────────────────────────────────────────────────────────────
@@ -164,7 +194,7 @@ export function fmtNcVal(nc: number): string {
 }
 
 export function scaleNC(nc: number, level: number): number {
-  return nc * Math.pow(1 + level / 100, 2);
+  return nc * Math.pow(1 + level / 25, 1.3);
 }
 
 // ── Grant reward ──────────────────────────────────────────────────────────────
@@ -203,6 +233,7 @@ export function grantReward(player: Player, job: JobKey, baseReward: ActionRewar
   const meta = JOB_META[job];
   if (leveled) {
     updateScoreboard(player, job, entry.lvl);
+    upsertTopPlayer(player.name, job, entry.lvl);
     player.sendMessage(`§6[Métier] ${meta.color}${meta.label} §6passe niveau §e${entry.lvl}§6 !`);
     player.playSound("random.levelup");
     player.onScreenDisplay.setActionBar(`${meta.color}${meta.label} §6— Niveau §e${entry.lvl} §6!`);

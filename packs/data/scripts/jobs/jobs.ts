@@ -1,5 +1,6 @@
-import { world, system, Player } from "@minecraft/server";
+import { world, system, Player, EntityComponentTypes, type EntityInventoryComponent } from "@minecraft/server";
 import { addBalance, fmtNC } from "~/common/economy.ts";
+import { getLives } from "~/life/helpers.ts";
 import { JOB_META, type JobKey } from "./constants.ts";
 import {
   getJobData, grantReward, getDefaultReward, getCustomJobReward,
@@ -95,7 +96,6 @@ world.afterEvents.playerBreakBlock.subscribe((ev) => {
 
 const fishingPlayers = new Map<string, number>();
 const fishDebits     = new Map<string, Map<string, number>>();
-const smeltingContext = new Map<string, number>();
 
 world.afterEvents.itemUse.subscribe((ev) => {
   if (ev.itemStack?.typeId === "minecraft:fishing_rod")
@@ -136,26 +136,74 @@ world.afterEvents.playerInventoryItemChange.subscribe((ev) => {
       fishingPlayers.delete(player.id);
     }
   }
-
-  if (aAmt > 0 && (smeltingContext.get(player.id) ?? 0) >= system.currentTick) {
-    const smeltCustom = getCustomJobReward("miner", aType);
-    const smeltReward = (smeltCustom?.category === "cuire" ? smeltCustom : null)
-      ?? (SMELT_ITEMS.has(aType) ? getDefaultReward("miner", "cuire", aType) : null);
-    if (smeltReward) {
-      const gained = aType === bType ? Math.max(0, aAmt - bAmt) : aAmt;
-      if (gained > 0) grantReward(player, "miner", smeltReward, aType, gained);
-    }
-    const fishCuireCustom = getCustomJobReward("fisher", aType);
-    if (fishCuireCustom?.category === "cuire") {
-      const gained = aType === bType ? Math.max(0, aAmt - bAmt) : aAmt;
-      if (gained > 0) grantReward(player, "fisher", fishCuireCustom, aType, gained);
-    }
-  }
 });
 
-world.afterEvents.playerInteractWithBlock.subscribe((ev) => {
-  if (ev.block.typeId === "minecraft:furnace" || ev.block.typeId === "minecraft:blast_furnace")
-    smeltingContext.set(ev.player.id, system.currentTick + 1200);
+// ── Four : XP de cuisson liée à la session d'ouverture du four lui-même ───────
+// L'ancienne détection (changement d'inventaire + fenêtre de temps, avec ou
+// sans check de proximité) accordait l'XP dès qu'un item du bon type
+// apparaissait dans l'inventaire, peu importe sa provenance (un lingot pris
+// dans un coffre proche comptait comme une sortie de four). On utilise ici les
+// events dédiés blockContainerOpened/Closed : on photographie l'inventaire du
+// joueur à l'ouverture de CE four précis, puis on compare à la fermeture. Seuls
+// les items réellement récupérés pendant cette session sont récompensés —
+// aucune dépendance à la lecture du contenu du four (pas toujours exposée par
+// l'API) ni à un minuteur qui peut expirer trop tôt.
+
+const FURNACE_TYPES = new Set([
+  "minecraft:furnace", "minecraft:lit_furnace",
+  "minecraft:blast_furnace", "minecraft:lit_blast_furnace",
+  "minecraft:smoker", "minecraft:lit_smoker",
+]);
+
+function snapshotInventory(player: Player): Map<string, number> {
+  const counts = new Map<string, number>();
+  const inv = player.getComponent(EntityComponentTypes.Inventory) as EntityInventoryComponent | undefined;
+  const container = inv?.container;
+  if (!container) return counts;
+  for (let i = 0; i < container.size; i++) {
+    const item = container.getItem(i);
+    if (!item) continue;
+    counts.set(item.typeId, (counts.get(item.typeId) ?? 0) + item.amount);
+  }
+  return counts;
+}
+
+const furnaceOpenSnapshots = new Map<string, Map<string, number>>();
+
+world.afterEvents.blockContainerOpened.subscribe((ev) => {
+  if (!FURNACE_TYPES.has(ev.block.typeId)) return;
+  const player = ev.openSource.entity;
+  if (!(player instanceof Player)) return;
+  furnaceOpenSnapshots.set(player.id, snapshotInventory(player));
+});
+
+world.afterEvents.blockContainerClosed.subscribe((ev) => {
+  if (!FURNACE_TYPES.has(ev.block.typeId)) return;
+  const player = ev.closeSource.entity;
+  if (!(player instanceof Player)) return;
+  const before = furnaceOpenSnapshots.get(player.id);
+  furnaceOpenSnapshots.delete(player.id);
+  if (!before) return;
+
+  system.run(() => {
+    const after = snapshotInventory(player);
+    for (const [typeId, afterCount] of after) {
+      const gained = afterCount - (before.get(typeId) ?? 0);
+      if (gained <= 0) continue;
+
+      const smeltCustom = getCustomJobReward("miner", typeId);
+      const smeltReward = (smeltCustom?.category === "cuire" ? smeltCustom : null)
+        ?? (SMELT_ITEMS.has(typeId) ? getDefaultReward("miner", "cuire", typeId) : null);
+      if (smeltReward) grantReward(player, "miner", smeltReward, typeId, gained);
+
+      const fishCuireCustom = getCustomJobReward("fisher", typeId);
+      if (fishCuireCustom?.category === "cuire") grantReward(player, "fisher", fishCuireCustom, typeId, gained);
+    }
+  });
+});
+
+world.afterEvents.playerLeave.subscribe((ev) => {
+  furnaceOpenSnapshots.delete(ev.playerId);
 });
 
 // ── Salaire périodique ────────────────────────────────────────────────────────
@@ -168,6 +216,7 @@ system.runInterval(() => {
   lastSalaryTick = system.currentTick;
 
   for (const player of world.getAllPlayers()) {
+    if (getLives(player) <= 0) continue;
     const data = getJobData(player);
     if (data.active.length === 0) continue;
     let total = 0;

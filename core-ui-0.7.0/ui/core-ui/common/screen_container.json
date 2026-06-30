@@ -1,0 +1,72 @@
+{
+	"namespace": "core_ui_common",
+	"screen_container": {
+		"type": "panel",
+		"size": [
+			"100%",
+			"100%"
+		],
+		"anchor_from": "top_left",
+		"anchor_to": "top_left",
+		"offset": [
+			"50% - 50%c",
+			"0%"
+		],
+		"$protocol_header": "bcuiv0005",
+		"bindings": [
+			{
+				"binding_name": "#title_text"
+			},
+			{
+				/* Strip protocol header (9 bytes) */
+				"binding_type": "view",
+				"source_property_name": "('%.9s' * #title_text)",
+				"target_property_name": "#protocol_header_sc"
+			},
+			{
+				"binding_type": "view",
+				"source_property_name": "(#title_text - #protocol_header_sc)",
+				"target_property_name": "#rem_after_header_sc"
+			},
+			{
+				/* Screen type is the first field after the header (83 bytes): 's:' + value + padding + marker */
+				"binding_type": "view",
+				"source_property_name": "('%.83s' * #rem_after_header_sc)",
+				"target_property_name": "#raw_screen_type"
+			},
+			{
+				/* Extract the value: drop the 's:' prefix and the ';' padding */
+				"binding_type": "view",
+				"source_property_name": "(('%.82s' * #raw_screen_type) - ('%.2s' * #raw_screen_type) - ';')",
+				"target_property_name": "#screen_type"
+			},
+			{
+				/* Render only for bcui forms — visible when the title carries the protocol header */
+				"binding_type": "view",
+				"source_property_name": "(not ((#title_text - $protocol_header) = #title_text))",
+				"target_property_name": "#visible"
+			}
+		],
+		"controls": [
+			{
+				"scroll_root@core_ui_screens.scroll": {
+					"bindings": [
+						{
+							"binding_type": "view",
+							"source_control_name": "screen_container",
+							"source_property_name": "(#screen_type = 'scroll')",
+							"target_property_name": "#visible"
+						}
+					]
+				}
+			}
+		]
+	},
+	"unused": {
+		"type": "panel",
+		"size": [
+			0,
+			0
+		]
+	}
+}

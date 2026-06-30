@@ -7,19 +7,20 @@ import {
 } from "@minecraft/server";
 import { fmtNC } from "~/common/economy.ts";
 import {
-  JOB_FR_NAMES, MAX_LEVEL,
+  JOB_FR_NAMES, JOB_NAME_LIST, MAX_LEVEL,
   resolveJob, type JobKey,
 } from "./constants.ts";
 import {
-  getJobData, setJobData,
+  getJobData, setJobData, getJobEntry,
   getCustomRewardsMap, setCustomRewardsMap,
   getCustomUpgradesMap, getEffectiveUpgrades,
   updateScoreboard, ensureObjectives,
+  upsertTopPlayer, getTop3Players,
   getSalaryMinutes, fmtNcVal,
   type JobCategory,
 } from "./helpers.ts";
 import { UPGRADES_CONFIG, type UpgradeEntry } from "./upgrades_config.ts";
-import { showJobMenu } from "./forms.ts";
+import { showJobMenu } from "./forms.tsx";
 
 const CUSTOM_UPGRADES_KEY = "shuuaddons:jobupgrades";
 const CUSTOM_SALARY_KEY   = "shuuaddons:jobsalary";
@@ -29,6 +30,7 @@ const SALARY_CONFIG_KEY   = "shuuaddons:salaryconfig";
 
 system.beforeEvents.startup.subscribe((ev) => {
   ensureObjectives();
+  ev.customCommandRegistry.registerEnum("shuuaddons:jobname", JOB_NAME_LIST);
 
   ev.customCommandRegistry.registerCommand(
     {
@@ -57,9 +59,9 @@ system.beforeEvents.startup.subscribe((ev) => {
       permissionLevel: CommandPermissionLevel.GameDirectors,
       cheatsRequired: true,
       mandatoryParameters: [
-        { name: "joueur",  type: CustomCommandParamType.String  },
-        { name: "metier",  type: CustomCommandParamType.String  },
-        { name: "niveau",  type: CustomCommandParamType.Integer },
+        { name: "joueur",                type: CustomCommandParamType.String  },
+        { name: "shuuaddons:jobname",    type: CustomCommandParamType.Enum    },
+        { name: "niveau",                type: CustomCommandParamType.Integer },
       ],
     },
     (origin, joueur: string, metier: string, niveau: number) => {
@@ -76,8 +78,117 @@ system.beforeEvents.startup.subscribe((ev) => {
         if (d.active.length > d.maxJobs) d.maxJobs = d.active.length;
         setJobData(target, d);
         updateScoreboard(target, job, lvl);
+        upsertTopPlayer(target.name, job, lvl);
         admin?.sendMessage(`§aMétier §e${job} §ade §e${target.name} §adéfini au niveau §e${lvl}§a.`);
         target.sendMessage(`§aVotre métier §e${job} §aa été défini au niveau §e${lvl}§a.`);
+      });
+      return { status: CustomCommandStatus.Success };
+    },
+  );
+});
+
+// ── /shuuaddons:givejoblevel ──────────────────────────────────────────────────
+
+system.beforeEvents.startup.subscribe((ev) => {
+  ev.customCommandRegistry.registerCommand(
+    {
+      name: "shuuaddons:givejoblevel",
+      description: "Ajoute des niveaux à un métier pour un joueur (relatif).",
+      permissionLevel: CommandPermissionLevel.GameDirectors,
+      cheatsRequired: true,
+      mandatoryParameters: [
+        { name: "joueur",             type: CustomCommandParamType.String  },
+        { name: "shuuaddons:jobname", type: CustomCommandParamType.Enum    },
+        { name: "niveau",             type: CustomCommandParamType.Integer },
+      ],
+    },
+    (origin, joueur: string, metier: string, niveau: number) => {
+      system.run(() => {
+        const admin  = world.getAllPlayers().find((p) => p.id === origin.sourceEntity?.id);
+        const target = world.getAllPlayers().find((p) => p.name === joueur);
+        if (!target) { admin?.sendMessage(`§cJoueur "${joueur}" introuvable.`); return; }
+        const job = resolveJob(metier);
+        if (!job) { admin?.sendMessage(`§cMétier inconnu. Valeurs : ${JOB_FR_NAMES}`); return; }
+        const d = getJobData(target);
+        const cur = getJobEntry(d, job);
+        const lvl = Math.max(0, Math.min(MAX_LEVEL, cur.lvl + niveau));
+        d.jobs[job] = { lvl, xp: 0, acc: 0 };
+        if (!d.active.includes(job)) d.active.push(job);
+        if (d.active.length > d.maxJobs) d.maxJobs = d.active.length;
+        setJobData(target, d);
+        updateScoreboard(target, job, lvl);
+        upsertTopPlayer(target.name, job, lvl);
+        admin?.sendMessage(`§aMétier §e${job} §ade §e${target.name} §a: §e${cur.lvl} → ${lvl}§a.`);
+        target.sendMessage(`§aVotre métier §e${job} §aest passé au niveau §e${lvl}§a.`);
+      });
+      return { status: CustomCommandStatus.Success };
+    },
+  );
+});
+
+// ── /shuuaddons:removejoblevel ────────────────────────────────────────────────
+
+system.beforeEvents.startup.subscribe((ev) => {
+  ev.customCommandRegistry.registerCommand(
+    {
+      name: "shuuaddons:removejoblevel",
+      description: "Retire des niveaux à un métier pour un joueur (relatif).",
+      permissionLevel: CommandPermissionLevel.GameDirectors,
+      cheatsRequired: true,
+      mandatoryParameters: [
+        { name: "joueur",             type: CustomCommandParamType.String  },
+        { name: "shuuaddons:jobname", type: CustomCommandParamType.Enum    },
+        { name: "niveau",             type: CustomCommandParamType.Integer },
+      ],
+    },
+    (origin, joueur: string, metier: string, niveau: number) => {
+      system.run(() => {
+        const admin  = world.getAllPlayers().find((p) => p.id === origin.sourceEntity?.id);
+        const target = world.getAllPlayers().find((p) => p.name === joueur);
+        if (!target) { admin?.sendMessage(`§cJoueur "${joueur}" introuvable.`); return; }
+        const job = resolveJob(metier);
+        if (!job) { admin?.sendMessage(`§cMétier inconnu. Valeurs : ${JOB_FR_NAMES}`); return; }
+        const d = getJobData(target);
+        const cur = getJobEntry(d, job);
+        const lvl = Math.max(0, Math.min(MAX_LEVEL, cur.lvl - niveau));
+        d.jobs[job] = { lvl, xp: 0, acc: 0 };
+        if (!d.active.includes(job)) d.active.push(job);
+        if (d.active.length > d.maxJobs) d.maxJobs = d.active.length;
+        setJobData(target, d);
+        updateScoreboard(target, job, lvl);
+        upsertTopPlayer(target.name, job, lvl);
+        admin?.sendMessage(`§aMétier §e${job} §ade §e${target.name} §a: §e${cur.lvl} → ${lvl}§a.`);
+        target.sendMessage(`§aVotre métier §e${job} §aest passé au niveau §e${lvl}§a.`);
+      });
+      return { status: CustomCommandStatus.Success };
+    },
+  );
+});
+
+// ── /shuuaddons:topjob ────────────────────────────────────────────────────────
+
+system.beforeEvents.startup.subscribe((ev) => {
+  ev.customCommandRegistry.registerCommand(
+    {
+      name: "shuuaddons:topjob",
+      description: "Affiche le top 3 d'un métier.",
+      permissionLevel: CommandPermissionLevel.Any,
+      cheatsRequired: false,
+      mandatoryParameters: [
+        { name: "shuuaddons:jobname", type: CustomCommandParamType.Enum },
+      ],
+    },
+    (origin, metier: string) => {
+      system.run(() => {
+        const p = world.getAllPlayers().find((x) => x.id === origin.sourceEntity?.id);
+        if (!p) return;
+        const job = resolveJob(metier);
+        if (!job) { p.sendMessage(`§cMétier inconnu. Valeurs : ${JOB_FR_NAMES}`); return; }
+        const top3 = getTop3Players(job);
+        if (top3.length === 0) { p.sendMessage(`§7Aucun classement pour §f${metier}§7 pour le moment.`); return; }
+        const medals = ["§61.", "§72.", "§c3."];
+        const lines = top3.map((e, i) => `${medals[i]} §f${e.name} §8— §eNiv ${e.lvl}`).join("\n");
+        p.sendMessage(`§6=== Top ${metier} ===\n${lines}`);
       });
       return { status: CustomCommandStatus.Success };
     },

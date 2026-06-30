@@ -1,6 +1,8 @@
 import "./life/life.ts";
 import "./jobs/jobs.ts";
 import "./common/economy.ts";
+import "./common/back.ts";
+import "./common/teleport.ts";
 import "./common/bundles.ts";
 import "./common/kit.ts";
 import "./shop/shop.ts";

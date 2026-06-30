@@ -1,7 +1,7 @@
 import { world, system, ItemStack, BlockPermutation } from "@minecraft/server";
 import { SHOP_BLOCK, DISPLAY_ENTITY, SHOP_BLOCK as SHOP_ITEM, DEFAULT_NAME } from "./constants.ts";
 import { isOwnerOrAdmin, isInOwnedClaim, getPlayerInv } from "./helpers.ts";
-import { showEmptyShopOptions, showSellerOptionsForm, showBuyForm } from "./forms.ts";
+import { showEmptyShopOptions, showSellerOptionsForm, showBuyForm } from "./forms.tsx";
 
 const _interactCooldown = new Set<string>();
 

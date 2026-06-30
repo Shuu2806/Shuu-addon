@@ -7,7 +7,19 @@ import {
   CustomCommandStatus,
 } from "@minecraft/server";
 
-const ECONOMY_KEY = "shuuaddons:eco";
+const ECONOMY_KEY        = "shuuaddons:eco";
+const ECONOMY_MIRROR_KEY = "shuuaddons:eco_mirror";
+
+function getMirror(): Record<string, number> {
+  const raw = world.getDynamicProperty(ECONOMY_MIRROR_KEY);
+  return typeof raw === "string" ? (JSON.parse(raw) as Record<string, number>) : {};
+}
+
+function setMirrorEntry(name: string, balance: number): void {
+  const m = getMirror();
+  m[name] = balance;
+  world.setDynamicProperty(ECONOMY_MIRROR_KEY, JSON.stringify(m));
+}
 
 export function getBalance(player: Player): number {
   const v = player.getDynamicProperty(ECONOMY_KEY);
@@ -15,7 +27,9 @@ export function getBalance(player: Player): number {
 }
 
 export function setBalance(player: Player, n: number): void {
-  player.setDynamicProperty(ECONOMY_KEY, Math.max(0, Math.floor(n)));
+  const v = Math.max(0, Math.floor(n));
+  player.setDynamicProperty(ECONOMY_KEY, v);
+  setMirrorEntry(player.name, v);
 }
 
 export function addBalance(player: Player, n: number): void {
@@ -28,6 +42,47 @@ export function removeBalance(player: Player, n: number): boolean {
   setBalance(player, cur - n);
   return true;
 }
+
+// ── Variantes par nom (incluent les joueurs hors ligne) ────────────────────────
+
+export function getBalanceByName(name: string): number {
+  const online = world.getAllPlayers().find((p) => p.name === name);
+  if (online) return getBalance(online);
+  return getMirror()[name] ?? 0;
+}
+
+export function setBalanceByName(name: string, n: number): number {
+  const v = Math.max(0, Math.floor(n));
+  const online = world.getAllPlayers().find((p) => p.name === name);
+  if (online) { setBalance(online, v); return v; }
+  setMirrorEntry(name, v);
+  return v;
+}
+
+export function addBalanceByName(name: string, n: number): number {
+  return setBalanceByName(name, getBalanceByName(name) + n);
+}
+
+export function removeBalanceByName(name: string, n: number): boolean {
+  const cur = getBalanceByName(name);
+  if (cur < n) return false;
+  setBalanceByName(name, cur - n);
+  return true;
+}
+
+// ── Sync à la connexion (cas où le solde a été modifié hors ligne) ─────────────
+
+world.afterEvents.playerSpawn.subscribe((ev) => {
+  if (!ev.initialSpawn) return;
+  system.run(() => {
+    const mirror = getMirror();
+    if (ev.player.name in mirror) {
+      ev.player.setDynamicProperty(ECONOMY_KEY, mirror[ev.player.name]);
+    } else {
+      setMirrorEntry(ev.player.name, getBalance(ev.player));
+    }
+  });
+});
 
 export function fmtNC(n: number): string {
   const s = Math.floor(n).toString();
@@ -43,15 +98,17 @@ system.beforeEvents.startup.subscribe((ev) => {
   ev.customCommandRegistry.registerCommand(
     {
       name: "shuuaddons:balance",
-      description: "Affiche votre solde en Nonocoins.",
+      description: "Affiche votre solde ou celui d'un autre joueur en Nonocoins.",
       permissionLevel: CommandPermissionLevel.Any,
       cheatsRequired: false,
+      optionalParameters: [{ name: "joueur", type: CustomCommandParamType.String }],
     },
-    (origin) => {
+    (origin, joueur?: string) => {
       system.run(() => {
         const p = world.getAllPlayers().find((x) => x.id === origin.sourceEntity?.id);
         if (!p) return;
-        p.sendMessage(`§6Votre solde : §e${fmtNC(getBalance(p))}`);
+        if (!joueur) { p.sendMessage(`§6Votre solde : §e${fmtNC(getBalance(p))}`); return; }
+        p.sendMessage(`§6Solde de §e${joueur} §6: §e${fmtNC(getBalanceByName(joueur))}`);
       });
       return { status: CustomCommandStatus.Success };
     },
@@ -75,13 +132,12 @@ system.beforeEvents.startup.subscribe((ev) => {
         const sender = world.getAllPlayers().find((x) => x.id === origin.sourceEntity?.id);
         if (!sender) return;
         if (montant <= 0) { sender.sendMessage("§cLe montant doit être positif."); return; }
-        const target = world.getAllPlayers().find((x) => x.name === joueur);
-        if (!target) { sender.sendMessage(`§cJoueur "${joueur}" introuvable (doit être en ligne).`); return; }
-        if (target.id === sender.id) { sender.sendMessage("§cVous ne pouvez pas vous payer vous-même."); return; }
+        if (joueur === sender.name) { sender.sendMessage("§cVous ne pouvez pas vous payer vous-même."); return; }
         if (!removeBalance(sender, montant)) { sender.sendMessage("§cSolde insuffisant."); return; }
-        addBalance(target, montant);
-        sender.sendMessage(`§aVous avez envoyé §e${fmtNC(montant)} §aà §e${target.name}§a.`);
-        target.sendMessage(`§aVous avez reçu §e${fmtNC(montant)} §ade §e${sender.name}§a.`);
+        addBalanceByName(joueur, montant);
+        sender.sendMessage(`§aVous avez envoyé §e${fmtNC(montant)} §aà §e${joueur}§a.`);
+        const target = world.getAllPlayers().find((x) => x.name === joueur);
+        target?.sendMessage(`§aVous avez reçu §e${fmtNC(montant)} §ade §e${sender.name}§a.`);
       });
       return { status: CustomCommandStatus.Success };
     },
@@ -91,61 +147,8 @@ system.beforeEvents.startup.subscribe((ev) => {
 system.beforeEvents.startup.subscribe((ev) => {
   ev.customCommandRegistry.registerCommand(
     {
-      name: "shuuaddons:givemoney",
-      description: "Donne des Nonocoins à un joueur.",
-      permissionLevel: CommandPermissionLevel.GameDirectors,
-      cheatsRequired: true,
-      mandatoryParameters: [
-        { name: "joueur", type: CustomCommandParamType.String },
-        { name: "montant", type: CustomCommandParamType.Integer },
-      ],
-    },
-    (origin, joueur: string, montant: number) => {
-      system.run(() => {
-        const p = world.getAllPlayers().find((x) => x.name === joueur);
-        if (!p) {
-          world.getAllPlayers()
-            .find((x) => x.id === origin.sourceEntity?.id)
-            ?.sendMessage(`§cJoueur "${joueur}" introuvable.`);
-          return;
-        }
-        addBalance(p, montant);
-        p.sendMessage(`§a+${fmtNC(montant)} ajoutés à votre solde.`);
-      });
-      return { status: CustomCommandStatus.Success };
-    },
-  );
-});
-
-system.beforeEvents.startup.subscribe((ev) => {
-  ev.customCommandRegistry.registerCommand(
-    {
-      name: "shuuaddons:setmoney",
-      description: "Définit le solde d'un joueur.",
-      permissionLevel: CommandPermissionLevel.GameDirectors,
-      cheatsRequired: true,
-      mandatoryParameters: [
-        { name: "joueur", type: CustomCommandParamType.String },
-        { name: "montant", type: CustomCommandParamType.Integer },
-      ],
-    },
-    (_origin, joueur: string, montant: number) => {
-      system.run(() => {
-        const p = world.getAllPlayers().find((x) => x.name === joueur);
-        if (!p) return;
-        setBalance(p, montant);
-        p.sendMessage(`§aVotre solde est maintenant de §e${fmtNC(montant)}§a.`);
-      });
-      return { status: CustomCommandStatus.Success };
-    },
-  );
-});
-
-system.beforeEvents.startup.subscribe((ev) => {
-  ev.customCommandRegistry.registerCommand(
-    {
-      name: "shuuaddons:takemoney",
-      description: "Retire des Nonocoins d'un joueur.",
+      name: "shuuaddons:givenc",
+      description: "Donne des Nonocoins à un joueur (même hors ligne).",
       permissionLevel: CommandPermissionLevel.GameDirectors,
       cheatsRequired: true,
       mandatoryParameters: [
@@ -156,10 +159,60 @@ system.beforeEvents.startup.subscribe((ev) => {
     (origin, joueur: string, montant: number) => {
       system.run(() => {
         const admin = world.getAllPlayers().find((x) => x.id === origin.sourceEntity?.id);
-        const p = world.getAllPlayers().find((x) => x.name === joueur);
-        if (!p) { admin?.sendMessage(`§cJoueur "${joueur}" introuvable.`); return; }
-        if (!removeBalance(p, montant)) { admin?.sendMessage(`§cSolde insuffisant pour ${joueur}.`); return; }
-        p.sendMessage(`§c-${fmtNC(montant)} retirés de votre solde.`);
+        addBalanceByName(joueur, montant);
+        admin?.sendMessage(`§a+${fmtNC(montant)} ajoutés au solde de §e${joueur}§a.`);
+        world.getAllPlayers().find((x) => x.name === joueur)
+          ?.sendMessage(`§a+${fmtNC(montant)} ajoutés à votre solde.`);
+      });
+      return { status: CustomCommandStatus.Success };
+    },
+  );
+});
+
+system.beforeEvents.startup.subscribe((ev) => {
+  ev.customCommandRegistry.registerCommand(
+    {
+      name: "shuuaddons:setnc",
+      description: "Définit le solde d'un joueur (même hors ligne).",
+      permissionLevel: CommandPermissionLevel.GameDirectors,
+      cheatsRequired: true,
+      mandatoryParameters: [
+        { name: "joueur", type: CustomCommandParamType.String },
+        { name: "montant", type: CustomCommandParamType.Integer },
+      ],
+    },
+    (origin, joueur: string, montant: number) => {
+      system.run(() => {
+        const admin = world.getAllPlayers().find((x) => x.id === origin.sourceEntity?.id);
+        setBalanceByName(joueur, montant);
+        admin?.sendMessage(`§aSolde de §e${joueur} §adéfini à §e${fmtNC(montant)}§a.`);
+        world.getAllPlayers().find((x) => x.name === joueur)
+          ?.sendMessage(`§aVotre solde est maintenant de §e${fmtNC(montant)}§a.`);
+      });
+      return { status: CustomCommandStatus.Success };
+    },
+  );
+});
+
+system.beforeEvents.startup.subscribe((ev) => {
+  ev.customCommandRegistry.registerCommand(
+    {
+      name: "shuuaddons:removenc",
+      description: "Retire des Nonocoins d'un joueur (même hors ligne).",
+      permissionLevel: CommandPermissionLevel.GameDirectors,
+      cheatsRequired: true,
+      mandatoryParameters: [
+        { name: "joueur", type: CustomCommandParamType.String },
+        { name: "montant", type: CustomCommandParamType.Integer },
+      ],
+    },
+    (origin, joueur: string, montant: number) => {
+      system.run(() => {
+        const admin = world.getAllPlayers().find((x) => x.id === origin.sourceEntity?.id);
+        if (!removeBalanceByName(joueur, montant)) { admin?.sendMessage(`§cSolde insuffisant pour ${joueur}.`); return; }
+        admin?.sendMessage(`§c-${fmtNC(montant)} retirés du solde de §e${joueur}§c.`);
+        world.getAllPlayers().find((x) => x.name === joueur)
+          ?.sendMessage(`§c-${fmtNC(montant)} retirés de votre solde.`);
       });
       return { status: CustomCommandStatus.Success };
     },

@@ -46,7 +46,8 @@
 						"filter": "esbuild",
 						"settings": {
 							"jsx": "automatic",
-							"jsxImportSource": "@bedrock-core/ui"
+							"jsxImportSource": "@bedrock-core/ui",
+							"external": ["@minecraft/server", "@minecraft/server-ui"]
 						}
 					},
 					{

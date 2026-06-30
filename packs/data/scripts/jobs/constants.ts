@@ -1,7 +1,7 @@
 export const JOBS_KEY = "shuuaddons:jobs";
 export const MAX_LEVEL = 200;
 export const JOB_SLOT_COUNT = 5;
-export const JOB_SLOT_COSTS = [0, 0, 50_000, 250_000, 1_000_000, 2_500_000];
+export const JOB_SLOT_COSTS = [0, 0, 40_000, 80_000, 200_000, 500_000];
 
 export const HIDDEN_BTN = "§0§0§0";
 
@@ -54,6 +54,7 @@ export const JOB_FR: Record<string, JobKey> = {
 };
 
 export const JOB_FR_NAMES = "hunter, bucheron, mineur, pecheur, fermier";
+export const JOB_NAME_LIST = ["hunter", "bucheron", "mineur", "pecheur", "fermier"];
 
 export function resolveJob(name: string): JobKey | null {
   return JOB_FR[name.toLowerCase()] ?? null;

@@ -1,5 +1,5 @@
 import { world, system, CommandPermissionLevel, CustomCommandStatus } from "@minecraft/server";
-import { showHologramMenu } from "./forms.ts";
+import { showHologramMenu } from "./forms.tsx";
 
 system.beforeEvents.startup.subscribe((ev) => {
   ev.customCommandRegistry.registerCommand(
