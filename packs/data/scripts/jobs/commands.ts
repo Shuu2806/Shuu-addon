@@ -7,7 +7,7 @@ import {
 } from "@minecraft/server";
 import { fmtNC } from "~/common/economy.ts";
 import {
-  JOB_FR_NAMES, JOB_NAME_LIST, MAX_LEVEL,
+  JOB_FR_NAMES, JOB_NAME_LIST, MAX_LEVEL, ALL_JOBS, JOB_META,
   resolveJob, type JobKey,
 } from "./constants.ts";
 import {
@@ -17,6 +17,7 @@ import {
   updateScoreboard, ensureObjectives,
   upsertTopPlayer, getTop3Players,
   getSalaryMinutes, fmtNcVal,
+  setJobBoost,
   type JobCategory,
 } from "./helpers.ts";
 import { UPGRADES_CONFIG, type UpgradeEntry } from "./upgrades_config.ts";
@@ -31,6 +32,7 @@ const SALARY_CONFIG_KEY   = "shuuaddons:salaryconfig";
 system.beforeEvents.startup.subscribe((ev) => {
   ensureObjectives();
   ev.customCommandRegistry.registerEnum("shuuaddons:jobname", JOB_NAME_LIST);
+  ev.customCommandRegistry.registerEnum("shuuaddons:jobnameall", [...JOB_NAME_LIST, "all"]);
 
   ev.customCommandRegistry.registerCommand(
     {
@@ -475,6 +477,47 @@ system.beforeEvents.startup.subscribe((ev) => {
         delete map[jobKey];
         world.setDynamicProperty(CUSTOM_UPGRADES_KEY, JSON.stringify(map));
         admin?.sendMessage(`§aUpgrades de §f${metier} §aremis aux valeurs par défaut.`);
+      });
+      return { status: CustomCommandStatus.Success };
+    },
+  );
+});
+
+// ── /shuuaddons:setjobboost ───────────────────────────────────────────────────
+
+system.beforeEvents.startup.subscribe((ev) => {
+  ev.customCommandRegistry.registerCommand(
+    {
+      name: "shuuaddons:setjobboost",
+      description: "Définit le multiplicateur XP/NC d'un métier (0 = désactiver, décimaux acceptés). Usage: <metier|all> <multiplicateur>",
+      permissionLevel: CommandPermissionLevel.GameDirectors,
+      cheatsRequired: true,
+      mandatoryParameters: [
+        { name: "shuuaddons:jobnameall", type: CustomCommandParamType.Enum },
+        { name: "multiplicateur",        type: CustomCommandParamType.Float },
+      ],
+    },
+    (origin, metier: string, multRaw: number) => {
+      system.run(() => {
+        const admin = world.getAllPlayers().find((p) => p.id === origin.sourceEntity?.id);
+        if (multRaw < 0) { admin?.sendMessage("§cMultiplicateur invalide."); return; }
+        const mult = Math.round(multRaw * 10) / 10;
+
+        const targets: JobKey[] = metier === "all" ? ALL_JOBS : (() => {
+          const job = resolveJob(metier);
+          return job ? [job] : [];
+        })();
+        if (targets.length === 0) { admin?.sendMessage(`§cMétier inconnu. Valeurs : ${JOB_FR_NAMES}, all`); return; }
+
+        for (const job of targets) setJobBoost(job, mult, null);
+
+        const names = targets.map((j) => JOB_META[j].label).join(", ");
+        if (mult === 0) {
+          admin?.sendMessage(`§aBoost retiré pour : §f${names}§a.`);
+        } else {
+          admin?.sendMessage(`§aBoost §e×${mult} §aappliqué à : §f${names}§a (permanent).`);
+          world.sendMessage(`§d[Boost] §eLe métier §f${names} §eest boosté §d×${mult} §eXP & NC §f(permanent)§e !`);
+        }
       });
       return { status: CustomCommandStatus.Success };
     },

@@ -1,6 +1,6 @@
 import { world, system, CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus } from "@minecraft/server";
 import { fmtNC } from "~/common/economy.ts";
-import { getShopItems, setShopItems, getCagnottes, setCagnottes, type ShopItem } from "./data.ts";
+import { getShopItems, setShopItems, getCagnottes, setCagnottes, type ShopItem, type Cagnotte } from "./data.ts";
 import { showShop } from "./forms.tsx";
 
 // ── Commandes ─────────────────────────────────────────────────────────────────
@@ -64,7 +64,7 @@ system.beforeEvents.startup.subscribe((ev) => {
     },
   );
 
-  ev.customCommandRegistry.registerEnum("shuuaddons:cagnottetype", ["nether", "end", "event"]);
+  ev.customCommandRegistry.registerEnum("shuuaddons:cagnottetype", ["nether", "end", "event", "boost"]);
 
   ev.customCommandRegistry.registerCommand(
     {
@@ -84,7 +84,7 @@ system.beforeEvents.startup.subscribe((ev) => {
         const admin = world.getAllPlayers().find((p) => p.id === origin.sourceEntity?.id);
         const list = getCagnottes();
         if (list.find((c) => c.name === nom)) { admin?.sendMessage(`§cCagnotte "${nom}" existe déjà.`); return; }
-        list.push({ id: `${Date.now()}`, name: nom, target: objectif, current: 0, type: type as "nether" | "end" | "event", eventName: evenement, done: false, contributors: {} });
+        list.push({ id: `${Date.now()}`, name: nom, target: objectif, current: 0, type: type as Cagnotte["type"], eventName: evenement, done: false, contributors: {} });
         setCagnottes(list);
         world.sendMessage(`§6[Cagnotte] §eLancement de §f"${nom}" §e— Objectif : §f${fmtNC(objectif)}`);
       });

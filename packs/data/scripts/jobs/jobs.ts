@@ -6,6 +6,7 @@ import {
   getJobData, grantReward, getDefaultReward, getCustomJobReward,
   hasCasserReward, FISH_ITEMS, SMELT_ITEMS,
   getSalaryAmount, getSalaryMinutes, syncAllScoreboards,
+  claimPendingBoost,
 } from "./helpers.ts";
 import "./commands.ts";
 
@@ -239,5 +240,8 @@ system.runInterval(() => {
 
 world.afterEvents.playerSpawn.subscribe((ev) => {
   if (!ev.initialSpawn) return;
-  system.run(() => syncAllScoreboards(ev.player));
+  system.run(() => {
+    syncAllScoreboards(ev.player);
+    claimPendingBoost(ev.player);
+  });
 });

@@ -20,6 +20,9 @@ const CUSTOM_REWARDS_KEY  = "shuuaddons:jobrewards";
 const CUSTOM_UPGRADES_KEY = "shuuaddons:jobupgrades";
 const CUSTOM_SALARY_KEY   = "shuuaddons:jobsalary";
 const SALARY_CONFIG_KEY   = "shuuaddons:salaryconfig";
+const BOOSTS_KEY          = "shuuaddons:jobboosts";
+const PLAYER_BOOST_KEY    = "shuuaddons:playerboost";
+const PENDING_BOOSTS_KEY  = "shuuaddons:pendingboosts";
 
 const BASE_SALARY: Record<JobKey, number> = {
   hunter: 50, lumberjack: 50, miner: 50, fisher: 50, farmer: 50,
@@ -197,6 +200,124 @@ export function scaleNC(nc: number, level: number): number {
   return nc * Math.pow(1 + level / 25, 1.3);
 }
 
+// ── Boost personnel (top contributeurs cagnotte) ───────────────────────────────
+
+interface PlayerBoostData { multiplier: number; expiresAt: number; }
+export interface PendingBoostReward { playerName: string; multiplier: number; durationMs: number; }
+
+function getPlayerBoostData(player: Player): PlayerBoostData | null {
+  const raw = player.getDynamicProperty(PLAYER_BOOST_KEY);
+  return typeof raw === "string" ? (JSON.parse(raw) as PlayerBoostData) : null;
+}
+
+export function getPlayerBoost(player: Player): number {
+  const data = getPlayerBoostData(player);
+  if (!data) return 1;
+  if (Date.now() > data.expiresAt) {
+    player.setDynamicProperty(PLAYER_BOOST_KEY, undefined);
+    return 1;
+  }
+  return data.multiplier;
+}
+
+function getPendingBoosts(): PendingBoostReward[] {
+  const raw = world.getDynamicProperty(PENDING_BOOSTS_KEY);
+  return typeof raw === "string" ? (JSON.parse(raw) as PendingBoostReward[]) : [];
+}
+
+function setPendingBoosts(list: PendingBoostReward[]): void {
+  world.setDynamicProperty(PENDING_BOOSTS_KEY, JSON.stringify(list));
+}
+
+function applyPersonalBoost(player: Player, reward: PendingBoostReward): void {
+  const expiresAt = Date.now() + reward.durationMs;
+  player.setDynamicProperty(PLAYER_BOOST_KEY, JSON.stringify({ multiplier: reward.multiplier, expiresAt }));
+  const hours = Math.round(reward.durationMs / (60 * 60 * 1000));
+  const rank  = reward.multiplier >= 2 ? "§61er" : reward.multiplier >= 1.5 ? "§72e" : "§c3e";
+  player.sendMessage(`§d[Cagnotte] §eTu es le ${rank} §econtributeur ! Boost §d×${reward.multiplier} §ependant §f${hours}h§e !`);
+}
+
+export function claimPendingBoost(player: Player): void {
+  const pending = getPendingBoosts();
+  const idx = pending.findIndex((p) => p.playerName === player.name);
+  if (idx === -1) return;
+  const [reward] = pending.splice(idx, 1);
+  setPendingBoosts(pending);
+  applyPersonalBoost(player, reward);
+}
+
+const TOP_MULTIPLIERS = [2, 1.5, 1.3] as const;
+const BOOST_DURATION_MS = 3 * 60 * 60 * 1000;
+
+export function addTopContributorBoosts(contributors: Record<string, number>): void {
+  const sorted = Object.entries(contributors).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  if (sorted.length === 0) return;
+
+  const pending = getPendingBoosts();
+  const lines: string[] = [];
+
+  for (let i = 0; i < sorted.length; i++) {
+    const [name] = sorted[i];
+    const multiplier = TOP_MULTIPLIERS[i];
+    const reward: PendingBoostReward = { playerName: name, multiplier, durationMs: BOOST_DURATION_MS };
+    const rank = i === 0 ? "§61er" : i === 1 ? "§72e" : "§c3e";
+    lines.push(`${rank} §f${name} §8— §d×${multiplier}`);
+
+    const existing = pending.findIndex((p) => p.playerName === name);
+    if (existing !== -1) pending[existing] = reward; else pending.push(reward);
+
+    const online = world.getAllPlayers().find((p) => p.name === name);
+    if (online) {
+      const pidx = pending.findIndex((p) => p.playerName === name);
+      if (pidx !== -1) {
+        const [r] = pending.splice(pidx, 1);
+        applyPersonalBoost(online, r);
+      }
+    }
+  }
+
+  setPendingBoosts(pending);
+  world.sendMessage(`§6[Cagnotte] §eTop contributeurs boostés :\n${lines.join("\n")}`);
+}
+
+// ── Boosts globaux (job) ────────────────────────────────────────────────────────
+
+export interface BoostEntry { multiplier: number; expiresAt: number | null; }
+type BoostsMap = Partial<Record<JobKey, BoostEntry>>;
+
+function getBoostsMap(): BoostsMap {
+  const raw = world.getDynamicProperty(BOOSTS_KEY);
+  return typeof raw === "string" ? (JSON.parse(raw) as BoostsMap) : {};
+}
+
+function setBoostsMap(map: BoostsMap): void {
+  world.setDynamicProperty(BOOSTS_KEY, JSON.stringify(map));
+}
+
+export function getJobBoost(job: JobKey): number {
+  const map = getBoostsMap();
+  const entry = map[job];
+  if (!entry) return 1;
+  if (entry.expiresAt !== null && Date.now() > entry.expiresAt) {
+    delete map[job];
+    setBoostsMap(map);
+    return 1;
+  }
+  return entry.multiplier;
+}
+
+// multiplier <= 0 désactive le boost (le retire). Les valeurs entre 0 et 1
+// (exclu) sont acceptées comme un débuff volontaire (ex: 0.5 = moitié XP/NC).
+export function setJobBoost(job: JobKey, multiplier: number, expiresAt: number | null): void {
+  const map = getBoostsMap();
+  if (multiplier <= 0) {
+    delete map[job];
+  } else {
+    map[job] = { multiplier, expiresAt };
+  }
+  setBoostsMap(map);
+}
+
 // ── Grant reward ──────────────────────────────────────────────────────────────
 
 export function grantReward(player: Player, job: JobKey, baseReward: ActionReward, actionId = "", count = 1): void {
@@ -206,7 +327,11 @@ export function grantReward(player: Player, job: JobKey, baseReward: ActionRewar
   const entry = getJobEntry(data, job);
   if (entry.lvl >= MAX_LEVEL) return;
 
-  const mult = getUpgradeMultiplier(job, entry.lvl, actionId);
+  const upgradeMult   = getUpgradeMultiplier(job, entry.lvl, actionId);
+  const globalBoost   = getJobBoost(job);
+  const personalBoost = getPlayerBoost(player);
+  const boostMult     = globalBoost + (personalBoost - 1);
+  const mult          = upgradeMult * boostMult;
   const reward: ActionReward = {
     xp: Math.round(baseReward.xp * mult) * count,
     nc: baseReward.nc * mult * count,
@@ -231,6 +356,7 @@ export function grantReward(player: Player, job: JobKey, baseReward: ActionRewar
   }
 
   const meta = JOB_META[job];
+  const boostTxt = boostMult > 1 ? ` §d[×${+boostMult.toFixed(2).replace(/\.?0+$/, "")}]` : "";
   if (leveled) {
     updateScoreboard(player, job, entry.lvl);
     upsertTopPlayer(player.name, job, entry.lvl);
@@ -240,7 +366,7 @@ export function grantReward(player: Player, job: JobKey, baseReward: ActionRewar
   } else {
     const gainTxt = whole >= 1 ? ` §6+${whole} NC` : "";
     player.onScreenDisplay.setActionBar(
-      `${meta.color}${meta.label} §8| §f+${reward.xp} XP${gainTxt} §8| §7Niv ${entry.lvl}`,
+      `${meta.color}${meta.label}${boostTxt} §8| §f+${reward.xp} XP${gainTxt} §8| §7Niv ${entry.lvl}`,
     );
   }
 

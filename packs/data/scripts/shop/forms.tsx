@@ -4,6 +4,8 @@ import { Scaffold } from "../common/scaffold.tsx";
 import { TitleBar, InfoBox, SaBtn, BG_BODY, BG_PANEL } from "../common/ui.tsx";
 import { IconBtn, WideIconBtn, WideXpBtn, TwoColRow, StyledInput } from "../common/components.tsx";
 import { getBalance, removeBalance, fmtNC } from "../common/economy.ts";
+import { setJobBoost, addTopContributorBoosts } from "../jobs/helpers.ts";
+import { ALL_JOBS, JOB_META } from "../jobs/constants.ts";
 import { getShopItems, getCagnottes, setCagnottes, getItemLabel, type ShopItem, type Cagnotte } from "./data.ts";
 
 const W  = 280;
@@ -126,7 +128,17 @@ export function showShop(player: Player): void {
           if (live.current >= live.target) live.done = true;
           setCagnottes(list);
           world.sendMessage(`§6[Cagnotte] §e${player.name} §6a contribué §e${fmtNC(actual)} §6à "§f${live.name}§6" !`);
-          if (live.done) world.sendMessage(`§6[Cagnotte] §a"${live.name}" §aatteinte !`);
+          if (live.done) {
+            world.sendMessage(`§6[Cagnotte] §a"${live.name}" §aatteinte !`);
+            if (live.type === "boost") {
+              const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+              for (const job of ALL_JOBS) setJobBoost(job, 2, expiresAt);
+              const jobNames = ALL_JOBS.map((j) => JOB_META[j].color + JOB_META[j].label).join("§r, ");
+              world.sendMessage(`§d[Event Boost] §eTous les métiers (${jobNames}§e) sont boostés §d×2 §ependant §f24 heures §e!`);
+            } else {
+              addTopContributorBoosts(live.contributors);
+            }
+          }
         });
       };
 

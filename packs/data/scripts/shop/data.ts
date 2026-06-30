@@ -15,7 +15,7 @@ export interface Cagnotte {
   name: string;
   target: number;
   current: number;
-  type: "nether" | "end" | "event";
+  type: "nether" | "end" | "event" | "boost";
   eventName?: string;
   done: boolean;
   contributors: Record<string, number>;
