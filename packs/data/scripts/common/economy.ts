@@ -84,6 +84,14 @@ world.afterEvents.playerSpawn.subscribe((ev) => {
   });
 });
 
+export function getTopBalances(count: number): { name: string; balance: number }[] {
+  const mirror = getMirror();
+  return Object.entries(mirror)
+    .map(([name, balance]) => ({ name, balance }))
+    .sort((a, b) => b.balance - a.balance)
+    .slice(0, count);
+}
+
 export function fmtNC(n: number): string {
   const s = Math.floor(n).toString();
   let r = "";
@@ -109,6 +117,29 @@ system.beforeEvents.startup.subscribe((ev) => {
         if (!p) return;
         if (!joueur) { p.sendMessage(`§6Votre solde : §e${fmtNC(getBalance(p))}`); return; }
         p.sendMessage(`§6Solde de §e${joueur} §6: §e${fmtNC(getBalanceByName(joueur))}`);
+      });
+      return { status: CustomCommandStatus.Success };
+    },
+  );
+});
+
+system.beforeEvents.startup.subscribe((ev) => {
+  ev.customCommandRegistry.registerCommand(
+    {
+      name: "shuuaddons:topbalance",
+      description: "Affiche le top 10 des soldes en Nonocoins.",
+      permissionLevel: CommandPermissionLevel.Any,
+      cheatsRequired: false,
+    },
+    (origin) => {
+      system.run(() => {
+        const p = world.getAllPlayers().find((x) => x.id === origin.sourceEntity?.id);
+        if (!p) return;
+        const top10 = getTopBalances(10);
+        if (top10.length === 0) { p.sendMessage("§7Aucun solde enregistré pour le moment."); return; }
+        const medals = ["§61.", "§72.", "§c3."];
+        const lines = top10.map((e, i) => `${medals[i] ?? `§7${i + 1}.`} §f${e.name} §8— §e${fmtNC(e.balance)}`).join("\n");
+        p.sendMessage(`§6=== Top Richesses ===\n${lines}`);
       });
       return { status: CustomCommandStatus.Success };
     },

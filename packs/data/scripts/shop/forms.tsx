@@ -5,6 +5,7 @@ import { TitleBar, InfoBox, SaBtn, BG_BODY, BG_PANEL } from "../common/ui.tsx";
 import { IconBtn, WideIconBtn, WideXpBtn, TwoColRow, StyledInput } from "../common/components.tsx";
 import { getBalance, removeBalance, fmtNC } from "../common/economy.ts";
 import { setJobBoost, addTopContributorBoosts } from "../jobs/helpers.ts";
+import { setNetherBlocked, setEndBlocked } from "../common/dimensions.ts";
 import { ALL_JOBS, JOB_META } from "../jobs/constants.ts";
 import { getShopItems, getCagnottes, setCagnottes, getItemLabel, type ShopItem, type Cagnotte } from "./data.ts";
 
@@ -137,6 +138,13 @@ export function showShop(player: Player): void {
               world.sendMessage(`§d[Event Boost] §eTous les métiers (${jobNames}§e) sont boostés §d×2 §ependant §f24 heures §e!`);
             } else {
               addTopContributorBoosts(live.contributors);
+              if (live.type === "nether") {
+                setNetherBlocked(false);
+                world.sendMessage(`§c[Nether] §aL'accès au Nether a été débloqué !`);
+              } else if (live.type === "end") {
+                setEndBlocked(false);
+                world.sendMessage(`§d[End] §aL'accès à l'End a été débloqué !`);
+              }
             }
           }
         });

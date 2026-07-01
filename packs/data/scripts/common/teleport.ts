@@ -98,13 +98,13 @@ system.beforeEvents.startup.subscribe((ev) => {
       description: "Demande à vous téléporter vers un joueur.",
       permissionLevel: CommandPermissionLevel.Any,
       cheatsRequired: false,
-      mandatoryParameters: [{ name: "joueur", type: CustomCommandParamType.PlayerSelector }],
+      mandatoryParameters: [{ name: "joueur", type: CustomCommandParamType.String }],
     },
-    (origin, joueurSelector: Player[]) => {
+    (origin, joueurName: string) => {
       system.run(() => {
         const sender = world.getAllPlayers().find((x) => x.id === origin.sourceEntity?.id);
         if (!sender) return;
-        const joueur = joueurSelector?.[0];
+        const joueur = world.getAllPlayers().find((x) => x.name === joueurName);
         if (!joueur) { sender.sendMessage("§cCe joueur n'est pas connecté."); return; }
         if (joueur.id === sender.id) { sender.sendMessage("§cVous ne pouvez pas vous téléporter vers vous-même."); return; }
         const requestId = ++tpRequestCounter;
