@@ -8,6 +8,8 @@ import {
   GAME_OVER_ACTION_PROPERTY,
   DEFAULT_GAME_OVER_ACTION,
   type GameOverAction,
+  PLAYTIME_MS_PROPERTY,
+  PROTECTION_NOTICE_PROPERTY,
 } from "./constants.ts";
 
 export function getLivesObjective() {
@@ -92,6 +94,25 @@ export function consumePendingLives(playerName: string): number {
 
 export function isEventModeActive(): boolean {
   return world.getDynamicProperty(EVENT_MODE_PROPERTY) === true;
+}
+
+export function getPlaytimeMs(player: Player): number {
+  const raw = player.getDynamicProperty(PLAYTIME_MS_PROPERTY);
+  return typeof raw === "number" ? raw : 0;
+}
+
+export function addPlaytimeMs(player: Player, deltaMs: number): number {
+  const total = getPlaytimeMs(player) + deltaMs;
+  player.setDynamicProperty(PLAYTIME_MS_PROPERTY, total);
+  return total;
+}
+
+export function hasBeenNotifiedProtectionEnded(player: Player): boolean {
+  return player.getDynamicProperty(PROTECTION_NOTICE_PROPERTY) === true;
+}
+
+export function markProtectionEndedNotified(player: Player): void {
+  player.setDynamicProperty(PROTECTION_NOTICE_PROPERTY, true);
 }
 
 export function getWorldSpawnLocation() {

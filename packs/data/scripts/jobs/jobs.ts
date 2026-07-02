@@ -1,10 +1,11 @@
 import { world, system, Player, EntityComponentTypes, type EntityInventoryComponent } from "@minecraft/server";
 import { addBalance, fmtNC } from "~/common/economy.ts";
 import { getLives } from "~/life/helpers.ts";
+import { onFishCaught } from "~/common/fishing_detection.ts";
 import { JOB_META, type JobKey } from "./constants.ts";
 import {
   getJobData, grantReward, getDefaultReward, getCustomJobReward,
-  hasCasserReward, FISH_ITEMS, SMELT_ITEMS,
+  hasCasserReward, SMELT_ITEMS,
   getSalaryAmount, getSalaryMinutes, syncAllScoreboards,
   claimPendingBoost,
 } from "./helpers.ts";
@@ -122,51 +123,37 @@ world.afterEvents.playerBreakBlock.subscribe((ev) => {
   });
 });
 
-// ── Pêcheur : fenêtre de pêche ────────────────────────────────────────────────
+// ── Pêcheur : récompense sur l'item réellement identifié ────────────────────────
+// L'ancienne détection (fenêtre fixe de 20s après le lancer + diff d'inventaire)
+// ratait les touches lentes, se corrompait dès que la canne elle-même changeait
+// de slot, ET était exploitable : n'importe quel item "pêchable" gagné pendant la
+// fenêtre (ramassé au sol, pris dans un coffre à côté) déclenchait la récompense,
+// peu importe s'il venait vraiment de la pêche. common/fishing_detection.ts
+// identifie maintenant l'item exact via l'entité de loot que le hameçon vanilla
+// fait spawn au moment de la prise (composant "minecraft:loot") — on récompense
+// cet item précis, jamais un diff d'inventaire générique.
 
-const fishingPlayers = new Map<string, number>();
-const fishDebits     = new Map<string, Map<string, number>>();
+// DEBUG temporaire — cf. common/fishing_detection.ts pour le même mécanisme côté détection.
+// const DEBUG_PLAYER_NAME = "Shuu2806";
+function debugMsg(_text: string) {
+  // world.getAllPlayers().find((p) => p.name === DEBUG_PLAYER_NAME)?.sendMessage(`§7[FishDebug] §f${_text}`);
+}
 
-world.afterEvents.itemUse.subscribe((ev) => {
-  if (ev.itemStack?.typeId === "minecraft:fishing_rod")
-    fishingPlayers.set(ev.source.id, system.currentTick + 400);
-});
-
-world.afterEvents.playerInventoryItemChange.subscribe((ev) => {
-  const { player, beforeItemStack, itemStack } = ev;
-  const bType = beforeItemStack?.typeId ?? "";
-  const aType = itemStack?.typeId ?? "";
-  const bAmt  = beforeItemStack?.amount ?? 0;
-  const aAmt  = itemStack?.amount ?? 0;
-
-  if (bAmt > 0 && FISH_ITEMS.has(bType)) {
-    const lost = bType === aType ? Math.max(0, bAmt - aAmt) : bAmt;
-    if (lost > 0) {
-      const d = fishDebits.get(player.id) ?? new Map<string, number>();
-      d.set(bType, (d.get(bType) ?? 0) + lost);
-      fishDebits.set(player.id, d);
-    }
+onFishCaught(({ player, item }) => {
+  if (!item) {
+    debugMsg(`[5] onFishCaught reçu mais item NON IDENTIFIÉ — aucune récompense — ${player.name}`);
+    return;
   }
+  debugMsg(`[5] onFishCaught reçu — item=${item.typeId} x${item.amount} — ${player.name}`);
 
-  if (aAmt > 0 && FISH_ITEMS.has(aType)) {
-    const gained = aType === bType ? Math.max(0, aAmt - bAmt) : aAmt;
-    if (gained <= 0) return;
-    if ((fishingPlayers.get(player.id) ?? 0) < system.currentTick) return;
-
-    const d = fishDebits.get(player.id) ?? new Map<string, number>();
-    const debit = d.get(aType) ?? 0;
-    const effective = Math.max(0, gained - debit);
-    const newDebit = Math.max(0, debit - gained);
-    if (newDebit === 0) d.delete(aType); else d.set(aType, newDebit);
-
-    if (effective > 0) {
-      const customR = getCustomJobReward("fisher", aType);
-      const reward = (customR?.category === "pecher" ? customR : null) ?? getDefaultReward("fisher", "pecher", aType);
-      if (!reward) return;
-      grantReward(player, "fisher", reward, aType);
-      fishingPlayers.delete(player.id);
-    }
+  const customR = getCustomJobReward("fisher", item.typeId);
+  const reward = (customR?.category === "pecher" ? customR : null) ?? getDefaultReward("fisher", "pecher", item.typeId);
+  if (!reward) {
+    debugMsg(`[6] item pêché (${item.typeId}) mais AUCUNE config de reward trouvée — ${player.name}`);
+    return;
   }
+  debugMsg(`[7] récompense accordée pour ${item.typeId} (xp=${reward.xp}, nc=${reward.nc}) — ${player.name}`);
+  grantReward(player, "fisher", reward, item.typeId, item.amount);
 });
 
 // ── Four : XP de cuisson liée à la session d'ouverture du four lui-même ───────
@@ -236,8 +223,6 @@ world.afterEvents.blockContainerClosed.subscribe((ev) => {
 world.afterEvents.playerLeave.subscribe((ev) => {
   furnaceOpenSnapshots.delete(ev.playerId);
   sugarcaneBonusPending.delete(ev.playerId);
-  fishingPlayers.delete(ev.playerId);
-  fishDebits.delete(ev.playerId);
 });
 
 // ── Salaire périodique ────────────────────────────────────────────────────────
@@ -246,7 +231,10 @@ const LAST_SALARY_KEY = "shuuaddons:lastsalary";
 
 function getLastSalaryTime(): number {
   const raw = world.getDynamicProperty(LAST_SALARY_KEY);
-  return typeof raw === "number" ? raw : Date.now();
+  // 0 (et non Date.now()) : sinon "jamais payé" se traduit par un écart nul,
+  // qui ne dépasse jamais intervalMs et empêche à jamais le tout premier
+  // paiement (et donc l'initialisation de la propriété elle-même).
+  return typeof raw === "number" ? raw : 0;
 }
 
 system.runInterval(() => {

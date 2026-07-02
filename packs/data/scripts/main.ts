@@ -1,4 +1,6 @@
 import "./life/life.ts";
+import "./common/fishing_detection.ts";
+import "./common/fishing_indicator.ts";
 import "./jobs/jobs.ts";
 import "./common/economy.ts";
 import "./common/back.ts";
@@ -7,6 +9,7 @@ import "./common/fakeleave.ts";
 import "./common/dimensions.ts";
 import "./common/protection.ts";
 import "./common/ban.ts";
+import "./common/afk.ts";
 import "./common/bundles.ts";
 import "./common/kit.ts";
 import "./shop/shop.ts";

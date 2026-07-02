@@ -39,7 +39,7 @@ export const UPGRADES_CONFIG: UpgradesConfig = {
       match: [] },
     { level: 50,  label: "Expert Mineur",
       multiplier: 1.4,
-      match: ["nether_gold", "nether_quartz", "ancient_debris"] },
+      match: [] },
     { level: 100, label: "Légende du Mineur",
       multiplier: 1.6,
       match: [] },

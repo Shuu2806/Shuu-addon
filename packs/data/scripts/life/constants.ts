@@ -10,3 +10,8 @@ export type GameOverAction = "spectator" | "kick";
 export const GAME_OVER_ACTION_PROPERTY = "shuuaddons:gameOverAction";
 export const GAME_OVER_ACTION_ENUM = "shuuaddons:gameoveraction";
 export const DEFAULT_GAME_OVER_ACTION: GameOverAction = "spectator";
+
+// Protection nouveau joueur : pas de perte de vie durant les 3 premières heures de jeu cumulées.
+export const PLAYTIME_MS_PROPERTY = "shuuaddons:playtimeMs";
+export const NEW_PLAYER_PROTECTION_MS = 3 * 60 * 60 * 1000;
+export const PROTECTION_NOTICE_PROPERTY = "shuuaddons:lifeProtectionNotified";

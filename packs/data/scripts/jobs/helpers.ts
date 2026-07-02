@@ -352,12 +352,24 @@ export function setJobBoost(job: JobKey, multiplier: number, expiresAt: number |
 
 // ── Grant reward ──────────────────────────────────────────────────────────────
 
+// DEBUG temporaire — cf. common/fishing_detection.ts.
+// const DEBUG_PLAYER_NAME = "Shuu2806";
+function debugMsg(_text: string) {
+  // world.getAllPlayers().find((p) => p.name === DEBUG_PLAYER_NAME)?.sendMessage(`§7[FishDebug] §f${_text}`);
+}
+
 export function grantReward(player: Player, job: JobKey, baseReward: ActionReward, actionId = "", count = 1): void {
   const data = getJobData(player);
-  if (!data.active.includes(job)) return;
+  if (!data.active.includes(job)) {
+    debugMsg(`[8] grantReward(${job}) IGNORÉ — métier pas actif pour ${player.name} (actifs=${data.active.join(",") || "aucun"})`);
+    return;
+  }
 
   const entry = getJobEntry(data, job);
-  if (entry.lvl >= MAX_LEVEL) return;
+  if (entry.lvl >= MAX_LEVEL) {
+    debugMsg(`[8] grantReward(${job}) IGNORÉ — niveau max atteint pour ${player.name}`);
+    return;
+  }
 
   const upgradeMult   = getUpgradeMultiplier(job, entry.lvl, actionId);
   const globalBoost   = getJobBoost(job);

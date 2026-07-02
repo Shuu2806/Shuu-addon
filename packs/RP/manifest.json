@@ -4,7 +4,7 @@
 		"name": "pack.name",
 		"description": "pack.description",
 		"uuid": "19e4771a-d4ca-4b51-b182-db67bdaeff1e",
-		"version": [1, 1, 4],
+		"version": [1, 1, 9],
 		"min_engine_version": [1, 21, 0]
 	},
 	"modules": [
@@ -17,7 +17,7 @@
 	"dependencies": [
 		{
 			"uuid": "5b987ade-d265-403c-aa5c-63a049709fcd",
-			"version": [1, 1, 4]
+			"version": [1, 1, 9]
 		}
 	]
 }
