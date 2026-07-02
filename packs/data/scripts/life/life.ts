@@ -16,8 +16,8 @@ import { openReviveForm } from "./forms.tsx";
 import "./commands.ts";
 
 // DEBUG temporaire — broadcast à tout le monde pour comparer plusieurs joueurs en test.
-function debugMsg(text: string) {
-  world.sendMessage(`§7[LifeDebug] §f${text}`);
+function debugMsg(_text: string) {
+  // world.sendMessage(`§7[LifeDebug] §f${_text}`);
 }
 
 // ── Suivi du temps de jeu cumulé (protection nouveau joueur) ──────────────────
