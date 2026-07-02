@@ -1,5 +1,6 @@
 import { system, Player, Entity, ItemStack } from "@minecraft/server";
 import { Panel, Screen, Text, render, useExit, useState, type JSX } from "@bedrock-core/ui";
+import { useCloseOnHurt } from "../common/use-close-on-hurt.ts";
 import { Scaffold } from "../common/scaffold.tsx";
 import { TitleBar, InfoBox, SaBtn, BG_BODY, BG_PANEL } from "../common/ui.tsx";
 import { WideIconBtn, StyledInput, StyledSlider, StyledDropdown } from "../common/components.tsx";
@@ -21,6 +22,7 @@ const WC = W - 8;
 export function showEmptyShopOptions(player: Player, entity: Entity): void {
   render(function EmptyShopForm() {
     const exit = useExit();
+    useCloseOnHurt(player, exit);
     const [confirm, setConfirm] = useState(false);
 
     if (confirm) {
@@ -103,6 +105,7 @@ export function showSellForm(player: Player, entity: Entity): void {
 
   render(function SellForm() {
     const exit = useExit();
+    useCloseOnHurt(player, exit);
     const [selIdx,    setSelIdx]    = useState(0);
     const [shopName,  setShopName]  = useState(`Shop de ${player.name}`);
     const [priceStr,  setPriceStr]  = useState("100");
@@ -172,6 +175,7 @@ export function showSellForm(player: Player, entity: Entity): void {
 export function showSellerOptionsForm(player: Player, entity: Entity): void {
   render(function SellerForm() {
     const exit = useExit();
+    useCloseOnHurt(player, exit);
     type V = "main" | "add_stock" | "remove_stock" | "confirm_cancel" | "confirm_delete";
     const [view,       setView]       = useState<V>("main");
     const [addMax,     setAddMax]     = useState(1);
@@ -399,6 +403,7 @@ export function showBuyForm(buyer: Player, entity: Entity): void {
 
   render(function BuyForm() {
     const exit = useExit();
+    useCloseOnHurt(buyer, exit);
     const [qty,     setQty]     = useState(1);
     const [confirm, setConfirm] = useState(false);
 

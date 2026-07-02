@@ -1,5 +1,6 @@
 import { world, system, Player, ItemStack, EntityComponentTypes, type EntityInventoryComponent } from "@minecraft/server";
 import { Panel, Screen, Image, render, useExit, useState, type JSX } from "@bedrock-core/ui";
+import { useCloseOnHurt } from "../common/use-close-on-hurt.ts";
 import { Scaffold } from "../common/scaffold.tsx";
 import { TitleBar, InfoBox, SaBtn, BG_BODY, BG_PANEL } from "../common/ui.tsx";
 import { IconBtn, WideIconBtn, WideXpBtn, TwoColRow, StyledInput } from "../common/components.tsx";
@@ -21,6 +22,7 @@ type View =
 export function showShop(player: Player): void {
   render(function ShopForm() {
     const exit = useExit();
+    useCloseOnHurt(player, exit);
     const [view, setView] = useState<View>({ kind: "shop" });
     const [contrib, setContrib] = useState("");
 

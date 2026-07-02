@@ -1,9 +1,10 @@
 import { world, system, Player, EntityComponentTypes, type EntityInventoryComponent } from "@minecraft/server";
-import { Panel, Screen, Text, render, useExit, useState, type JSX } from "@bedrock-core/ui";
+import { Panel, Screen, render, useExit, useState, type JSX } from "@bedrock-core/ui";
+import { useCloseOnHurt } from "../common/use-close-on-hurt.ts";
 import { CenteredText } from "../common/centered-text.tsx";
 import { Scaffold } from "../common/scaffold.tsx";
 import { TitleBar, InfoBox, SaBtn, BG_BODY, BG_PANEL } from "../common/ui.tsx";
-import { IconBtn, WideIconBtn, TwoColRow, ActionReturnRow, ProgressBar, StyledInput, StyledDropdown } from "../common/components.tsx";
+import { IconBtn, WideIconBtn, TwoColRow, StyledInput, StyledDropdown } from "../common/components.tsx";
 import { getBalance, removeBalance, fmtNC } from "../common/economy.ts";
 import { recordBackPosition } from "../common/back.ts";
 import { startTpChannel } from "../common/tp-channel.ts";
@@ -77,6 +78,7 @@ export function executeTpToClaim(player: Player, group: ClaimGroup): void {
 export function showMainMenu(player: Player, initialView?: ClaimsView): void {
   render(function ClaimsForm() {
     const exit = useExit();
+    useCloseOnHurt(player, exit);
     const [view,       setView]       = useState<ClaimsView>(initialView ?? "main");
     const [newName,    setNewName]    = useState("");
     const [addMbrName, setAddMbrName] = useState("");
@@ -209,13 +211,14 @@ export function showMainMenu(player: Player, initialView?: ClaimsView): void {
                       {[
                         <SaBtn label="§aAcheter" onPress={() => {
                           if (!canAfford) return;
+                          exit();
                           system.run(() => {
                             if (!removeBalance(player, cost)) { player.sendMessage("§cSolde insuffisant."); return; }
                             const cur = getMaxAnchors(player);
                             player.setDynamicProperty("shuuaddons:maxAnchors", cur + 1);
                             player.sendMessage(`§aAncre achetée ! Vous pouvez avoir §e${cur + 1} §aclaim(s).`);
+                            showMainMenu(player, "my_groups");
                           });
-                          setView("my_groups");
                         }} />,
                         <SaBtn label="Annuler" onPress={() => setView("my_groups")} />,
                       ] as unknown as JSX.Element}
@@ -285,6 +288,7 @@ export function showMainMenu(player: Player, initialView?: ClaimsView): void {
       const doRename = () => {
         const err = validateClaimName(newName);
         if (err) { player.sendMessage(`§c${err}`); return; }
+        exit();
         system.run(() => {
           const gs = getClaimGroups();
           const g = gs.find(x => x.id === gid);
@@ -294,8 +298,8 @@ export function showMainMenu(player: Player, initialView?: ClaimsView): void {
           }
           g.name = newName; setClaimGroups(gs);
           player.sendMessage(`§aClaim renommé en "§e${newName}§a".`);
+          showMainMenu(player, { kind: "group_editor", groupId: gid });
         });
-        back();
       };
       return (
         <Scaffold>
@@ -378,6 +382,7 @@ export function showMainMenu(player: Player, initialView?: ClaimsView): void {
       const back = () => setView({ kind: "members", groupId: gid });
       const doAdd = () => {
         if (!addMbrName.trim()) return;
+        exit();
         system.run(() => {
           const gs = getClaimGroups();
           const g = gs.find(x => x.id === gid);
@@ -387,8 +392,8 @@ export function showMainMenu(player: Player, initialView?: ClaimsView): void {
           if (g.members.includes(addMbrName)) { player.sendMessage(`§e${addMbrName}§7 est déjà membre.`); return; }
           g.members.push(addMbrName); setClaimGroups(gs);
           player.sendMessage(`§a${addMbrName} ajouté comme membre de "§e${g.name}§a".`);
+          showMainMenu(player, { kind: "members", groupId: gid });
         });
-        back();
       };
       return (
         <Scaffold>
@@ -422,6 +427,7 @@ export function showMainMenu(player: Player, initialView?: ClaimsView): void {
       const [selIdx, setSelIdx] = useState(0);
       if (!group || group.members.length === 0) { back(); return <Scaffold>{[] as unknown as JSX.Element}</Scaffold>; }
       const doRemove = () => {
+        exit();
         system.run(() => {
           const gs = getClaimGroups();
           const g = gs.find(x => x.id === gid);
@@ -429,8 +435,8 @@ export function showMainMenu(player: Player, initialView?: ClaimsView): void {
           const removed = g.members.splice(selIdx, 1)[0];
           setClaimGroups(gs);
           player.sendMessage(`§a${removed} retiré des membres de "§e${g.name}§a".`);
+          showMainMenu(player, { kind: "members", groupId: gid });
         });
-        back();
       };
       return (
         <Scaffold>
@@ -495,6 +501,7 @@ export function showMainMenu(player: Player, initialView?: ClaimsView): void {
       const back = () => setView({ kind: "bans", groupId: gid });
       const doBan = () => {
         if (!banName.trim()) return;
+        exit();
         system.run(() => {
           const gs = getClaimGroups();
           const g = gs.find(x => x.id === gid);
@@ -502,8 +509,8 @@ export function showMainMenu(player: Player, initialView?: ClaimsView): void {
           if (g.banned.includes(banName)) { player.sendMessage(`§e${banName}§7 est déjà banni.`); return; }
           g.banned.push(banName); g.members = g.members.filter(m => m !== banName);
           setClaimGroups(gs); player.sendMessage(`§a${banName} banni du claim "§e${g.name}§a".`);
+          showMainMenu(player, { kind: "bans", groupId: gid });
         });
-        back();
       };
       return (
         <Scaffold>
@@ -537,14 +544,15 @@ export function showMainMenu(player: Player, initialView?: ClaimsView): void {
       const [selIdx, setSelIdx] = useState(0);
       if (!group || group.banned.length === 0) { back(); return <Scaffold>{[] as unknown as JSX.Element}</Scaffold>; }
       const doUnban = () => {
+        exit();
         system.run(() => {
           const gs = getClaimGroups();
           const g = gs.find(x => x.id === gid);
           if (!g || selIdx >= g.banned.length) return;
           const unbanned = g.banned.splice(selIdx, 1)[0];
           setClaimGroups(gs); player.sendMessage(`§a${unbanned} débanni du claim "§e${g.name}§a".`);
+          showMainMenu(player, { kind: "bans", groupId: gid });
         });
-        back();
       };
       return (
         <Scaffold>
@@ -715,6 +723,7 @@ export function showMainMenu(player: Player, initialView?: ClaimsView): void {
                     <Panel width={WC} flexDirection="column" gap={4} marginTop={4}>
                       {[
                         isOwner && <SaBtn label={`§a§lDéfinir TP ici §f${fmtNC(TP_SET_COST)}`} width={WC} onPress={() => {
+                          exit();
                           system.run(() => {
                             const gs = getClaimGroups();
                             const g = gs.find(x => x.id === gid);
@@ -724,8 +733,8 @@ export function showMainMenu(player: Player, initialView?: ClaimsView): void {
                             if (!removeBalance(player, TP_SET_COST)) { player.sendMessage("§cSolde insuffisant."); return; }
                             g.tpPoint = { x: player.location.x, y: player.location.y, z: player.location.z, dim: player.dimension.id };
                             setClaimGroups(gs); player.sendMessage(`§aPoint de TP défini pour "§e${g.name}§a".`);
+                            showMainMenu(player, { kind: "tp_menu", groupId: gid });
                           });
-                          back();
                         }} />,
                         hasTp && <SaBtn label={`§e§lSe TP §f${fmtNC(TP_USE_COST)}`} width={WC} onPress={() => {
                           const g = getGroup(gid);
@@ -733,14 +742,15 @@ export function showMainMenu(player: Player, initialView?: ClaimsView): void {
                           exit();
                         }} />,
                         isOwner && hasTp && <SaBtn label="§cSupprimer TP" width={WC} onPress={() => {
+                          exit();
                           system.run(() => {
                             const gs = getClaimGroups();
                             const g = gs.find(x => x.id === gid);
                             if (!g) return;
                             delete g.tpPoint; setClaimGroups(gs);
                             player.sendMessage("§aPoint de TP supprimé.");
+                            showMainMenu(player, { kind: "tp_menu", groupId: gid });
                           });
-                          back();
                         }} />,
                       ].filter(Boolean) as unknown as JSX.Element}
                     </Panel>,
@@ -920,6 +930,7 @@ export function showMainMenu(player: Player, initialView?: ClaimsView): void {
 export function showAdminMenu(player: Player): void {
   render(function AdminClaimsForm() {
     const exit = useExit();
+    useCloseOnHurt(player, exit);
     const [view, setView] = useState<"menu" | "history">("menu");
     const { cx, cz } = getChunk(player.location.x, player.location.z);
     const groups = getClaimGroups();
@@ -1007,6 +1018,7 @@ export function showAdminMenu(player: Player): void {
 export function showHomeMenu(player: Player, claimGroups: ClaimGroup[]): void {
   render(function HomeForm() {
     const exit = useExit();
+    useCloseOnHurt(player, exit);
     const bal = getBalance(player);
     return (
       <Scaffold>

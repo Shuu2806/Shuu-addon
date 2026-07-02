@@ -8,7 +8,7 @@ import {
   reviveFromSpectator,
   consumePendingLives,
 } from "./helpers.ts";
-import { openReviveForm } from "./forms.ts";
+import { openReviveForm } from "./forms.tsx";
 import "./commands.ts";
 
 world.afterEvents.playerSpawn.subscribe((event) => {

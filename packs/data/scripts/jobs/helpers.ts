@@ -31,18 +31,39 @@ const BASE_SALARY: Record<JobKey, number> = {
 export const FISH_ITEMS  = new Set(Object.keys(JOBS_CONFIG.fisher?.pecher  ?? {}));
 export const SMELT_ITEMS = new Set(Object.keys(JOBS_CONFIG.miner?.cuire   ?? {}));
 
-// ── Job data ──────────────────────────────────────────────────────────────────
+// ── Job data (cache in-memory pour éviter JSON.parse à chaque récompense) ─────
+
+const jobCache = new Map<string, JobData>();
 
 export function getJobData(player: Player): JobData {
+  const cached = jobCache.get(player.id);
+  if (cached) return cached;
   const raw = player.getDynamicProperty(JOBS_KEY);
-  return typeof raw === "string"
-    ? (JSON.parse(raw) as JobData)
-    : { jobs: {}, active: [], maxJobs: 1 };
+  try {
+    const data = typeof raw === "string"
+      ? (JSON.parse(raw) as JobData)
+      : { jobs: {}, active: [], maxJobs: 1 };
+    jobCache.set(player.id, data);
+    return data;
+  } catch (_) {
+    const fallback: JobData = { jobs: {}, active: [], maxJobs: 1 };
+    jobCache.set(player.id, fallback);
+    return fallback;
+  }
 }
 
 export function setJobData(player: Player, data: JobData): void {
+  jobCache.set(player.id, data);
   player.setDynamicProperty(JOBS_KEY, JSON.stringify(data));
 }
+
+export function clearJobCache(playerId: string): void {
+  jobCache.delete(playerId);
+}
+
+world.afterEvents.playerLeave.subscribe((ev) => {
+  jobCache.delete(ev.playerId);
+});
 
 export function getJobEntry(data: JobData, job: JobKey): JobEntry {
   return data.jobs[job] ?? { lvl: 0, xp: 0, acc: 0 };
@@ -75,22 +96,33 @@ export function syncAllScoreboards(player: Player): void {
   }
 }
 
-// ── Top players cache (world dynamic property) ────────────────────────────────
+// ── Top players (cache in-memory, flush uniquement si changement réel) ────────
 
 const TOP_PLAYERS_KEY = "shuuaddons:topplayers";
 type TopPlayersData = Partial<Record<JobKey, Record<string, { name: string; lvl: number }>>>;
 
+let topPlayersCache: TopPlayersData | null = null;
+
 function getTopPlayersData(): TopPlayersData {
+  if (topPlayersCache) return topPlayersCache;
   const raw = world.getDynamicProperty(TOP_PLAYERS_KEY);
-  return typeof raw === "string" ? (JSON.parse(raw) as TopPlayersData) : {};
+  try {
+    topPlayersCache = typeof raw === "string" ? (JSON.parse(raw) as TopPlayersData) : {};
+  } catch (_) {
+    topPlayersCache = {};
+  }
+  return topPlayersCache;
 }
 
 export function upsertTopPlayer(name: string, job: JobKey, lvl: number): void {
   const data = getTopPlayersData();
   if (!data[job]) data[job] = {};
+  const current = data[job]![name];
   if (lvl > 0) {
+    if (current?.lvl === lvl) return;
     data[job]![name] = { name, lvl };
   } else {
+    if (!current) return;
     delete data[job]![name];
   }
   world.setDynamicProperty(TOP_PLAYERS_KEY, JSON.stringify(data));

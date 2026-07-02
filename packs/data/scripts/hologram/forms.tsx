@@ -1,5 +1,6 @@
 import { system, Player, Entity } from "@minecraft/server";
 import { Panel, Screen, Text, render, useExit, useState, type JSX } from "@bedrock-core/ui";
+import { useCloseOnHurt } from "../common/use-close-on-hurt.ts";
 import { Scaffold } from "../common/scaffold.tsx";
 import { TitleBar, InfoBox, SaBtn, BG_BODY, BG_PANEL } from "../common/ui.tsx";
 import { WideIconBtn, StyledInput, StyledSlider } from "../common/components.tsx";
@@ -13,6 +14,7 @@ const W_CONTENT = W - 8;
 export function showHologramMenu(player: Player): void {
   render(function HologramForm() {
     const exit = useExit();
+    useCloseOnHurt(player, exit);
     const [view, setView]         = useState<View>("menu");
     const [holoText, setHoloText] = useState("");
     const [colorIdx, setColorIdx] = useState(15);

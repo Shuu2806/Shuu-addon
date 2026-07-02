@@ -82,15 +82,44 @@ world.afterEvents.playerBreakBlock.subscribe((ev) => {
 
 // ── Fermier ───────────────────────────────────────────────────────────────────
 
+// Quand le 2e bloc de canne à sucre est cassé, le 3e tombe sans déclencher
+// playerBreakBlock. On détecte la présence du 3e avant la casse (beforeEvent)
+// puis on accorde le bonus dans l'afterEvent.
+const sugarcaneBonusPending = new Map<string, { xp: number; nc: number }>();
+
+world.beforeEvents.playerBreakBlock.subscribe((ev) => {
+  if (ev.block.typeId !== "minecraft:reeds") return;
+  const { x, y, z } = ev.block;
+  // 2e bloc : reeds en dessous
+  const below = ev.player.dimension.getBlock({ x, y: y - 1, z });
+  if (below?.typeId !== "minecraft:reeds") return;
+  // 3e bloc : reeds au dessus
+  const above = ev.player.dimension.getBlock({ x, y: y + 1, z });
+  if (above?.typeId !== "minecraft:reeds") return;
+  // Le 3e bloc ne doit pas avoir été posé par le joueur
+  if (placedByPlayer.has(`${x},${y + 1},${z}`)) return;
+  // Le 2e bloc ne doit pas avoir été posé par le joueur
+  if (placedByPlayer.has(`${x},${y},${z}`)) return;
+  const customR = getCustomJobReward("farmer", "minecraft:reeds");
+  const reward = (customR?.category === "casser" ? customR : null)
+    ?? getDefaultReward("farmer", "casser", "minecraft:reeds");
+  if (reward) sugarcaneBonusPending.set(ev.player.id, reward);
+});
+
 world.afterEvents.playerBreakBlock.subscribe((ev) => {
   const tid = ev.brokenBlockPermutation?.type?.id ?? "";
   const customR = getCustomJobReward("farmer", tid);
   const reward = (customR?.category === "casser" ? customR : null)
     ?? getDefaultReward("farmer", "casser", tid, ev.brokenBlockPermutation);
-  if (!reward) return;
   const key = `${ev.block.x},${ev.block.y},${ev.block.z}`;
+  const bonus = tid === "minecraft:reeds" ? sugarcaneBonusPending.get(ev.player.id) : undefined;
+  if (bonus) sugarcaneBonusPending.delete(ev.player.id);
+  if (!reward) return;
   if (placedByPlayer.has(key)) { placedByPlayer.delete(key); return; }
-  system.run(() => grantReward(ev.player, "farmer", reward, tid));
+  system.run(() => {
+    grantReward(ev.player, "farmer", reward, tid);
+    if (bonus) grantReward(ev.player, "farmer", bonus, tid);
+  });
 });
 
 // ── Pêcheur : fenêtre de pêche ────────────────────────────────────────────────
@@ -132,7 +161,8 @@ world.afterEvents.playerInventoryItemChange.subscribe((ev) => {
 
     if (effective > 0) {
       const customR = getCustomJobReward("fisher", aType);
-      const reward = (customR?.category === "pecher" ? customR : null) ?? { xp: 20, nc: 5 };
+      const reward = (customR?.category === "pecher" ? customR : null) ?? getDefaultReward("fisher", "pecher", aType);
+      if (!reward) return;
       grantReward(player, "fisher", reward, aType);
       fishingPlayers.delete(player.id);
     }
@@ -205,16 +235,24 @@ world.afterEvents.blockContainerClosed.subscribe((ev) => {
 
 world.afterEvents.playerLeave.subscribe((ev) => {
   furnaceOpenSnapshots.delete(ev.playerId);
+  sugarcaneBonusPending.delete(ev.playerId);
+  fishingPlayers.delete(ev.playerId);
+  fishDebits.delete(ev.playerId);
 });
 
 // ── Salaire périodique ────────────────────────────────────────────────────────
 
-let lastSalaryTick = system.currentTick;
+const LAST_SALARY_KEY = "shuuaddons:lastsalary";
+
+function getLastSalaryTime(): number {
+  const raw = world.getDynamicProperty(LAST_SALARY_KEY);
+  return typeof raw === "number" ? raw : Date.now();
+}
 
 system.runInterval(() => {
-  const intervalTicks = getSalaryMinutes() * 1200;
-  if (system.currentTick - lastSalaryTick < intervalTicks) return;
-  lastSalaryTick = system.currentTick;
+  const intervalMs = getSalaryMinutes() * 60_000;
+  if (Date.now() - getLastSalaryTime() < intervalMs) return;
+  world.setDynamicProperty(LAST_SALARY_KEY, Date.now());
 
   for (const player of world.getAllPlayers()) {
     if (getLives(player) <= 0) continue;
@@ -223,7 +261,7 @@ system.runInterval(() => {
     let total = 0;
     const lines: string[] = [];
     for (const job of data.active) {
-      const e = getJobData(player).jobs[job];
+      const e = data.jobs[job as JobKey];
       const lvl = e?.lvl ?? 0;
       const amount = getSalaryAmount(job as JobKey, lvl);
       total += amount;

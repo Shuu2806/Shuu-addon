@@ -1,5 +1,6 @@
 import { system, Player } from "@minecraft/server";
 import { Panel, Screen, Image, render, useExit, useState, type JSX } from "@bedrock-core/ui";
+import { useCloseOnHurt } from "../common/use-close-on-hurt.ts";
 import { CenteredText } from "../common/centered-text.tsx";
 import { Scaffold } from "../common/scaffold.tsx";
 import { TitleBar, InfoBox, SaBtn, BG_BODY, BG_PANEL } from "../common/ui.tsx";
@@ -37,6 +38,7 @@ function fmtNcVal(nc: number): string {
 export function showJobMenu(player: Player): void {
   render(function JobsForm() {
     const exit = useExit();
+    useCloseOnHurt(player, exit);
     const [view, setView] = useState<View>({ kind: "menu" });
 
     const data          = getJobData(player);
@@ -390,6 +392,7 @@ export function showJobMenu(player: Player): void {
 export function showJobDetail(player: Player, job: JobKey): void {
   render(function JobDetailForm() {
     const exit = useExit();
+    useCloseOnHurt(player, exit);
     const [view, setView] = useState<{ kind: "detail" } | { kind: "gains" } | { kind: "confirm_leave" }>({ kind: "detail" });
     const data   = getJobData(player);
     const e      = getJobEntry(data, job);

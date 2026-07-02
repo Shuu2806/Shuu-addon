@@ -22,9 +22,38 @@ export function getLives(player: Player): number {
   return typeof lives === "number" ? lives : STARTING_LIVES;
 }
 
+const DEAD_PLAYERS_KEY = "shuuaddons:deadplayers";
+
+function getDeadNamesRaw(): string[] {
+  const raw = world.getDynamicProperty(DEAD_PLAYERS_KEY);
+  try { return typeof raw === "string" ? (JSON.parse(raw) as string[]) : []; }
+  catch { return []; }
+}
+
+export function getDeadPlayerNames(): string[] {
+  return getDeadNamesRaw();
+}
+
+function markPlayerDead(name: string): void {
+  const names = getDeadNamesRaw();
+  if (names.includes(name)) return;
+  names.push(name);
+  world.setDynamicProperty(DEAD_PLAYERS_KEY, JSON.stringify(names));
+}
+
+function markPlayerAlive(name: string): void {
+  const names = getDeadNamesRaw();
+  const idx = names.indexOf(name);
+  if (idx === -1) return;
+  names.splice(idx, 1);
+  world.setDynamicProperty(DEAD_PLAYERS_KEY, JSON.stringify(names));
+}
+
 export function setLives(player: Player, lives: number): void {
   player.setDynamicProperty(LIVES_PROPERTY, lives);
   getLivesObjective().setScore(player, lives);
+  if (lives <= 0) markPlayerDead(player.name);
+  else markPlayerAlive(player.name);
 }
 
 export function getGameOverAction(): GameOverAction {
@@ -39,7 +68,11 @@ export function setGameOverAction(action: GameOverAction): void {
 
 export function getPendingLives(): Record<string, number> {
   const raw = world.getDynamicProperty(PENDING_LIVES_PROPERTY);
-  return typeof raw === "string" ? (JSON.parse(raw) as Record<string, number>) : {};
+  try {
+    return typeof raw === "string" ? (JSON.parse(raw) as Record<string, number>) : {};
+  } catch (_) {
+    return {};
+  }
 }
 
 export function addPendingLives(playerName: string, amount: number): void {
@@ -62,8 +95,16 @@ export function isEventModeActive(): boolean {
 }
 
 export function getWorldSpawnLocation() {
+  const raw = world.getDynamicProperty("shuuaddons:worldspawn");
+  if (typeof raw === "string") {
+    try {
+      const sp = JSON.parse(raw) as { x: number; y: number; z: number; dim: string };
+      const dimension = world.getDimension(sp.dim.replace("minecraft:", ""));
+      return { location: { x: sp.x, y: sp.y, z: sp.z }, dimension };
+    } catch (_) {}
+  }
   const dimension = world.getDimension("overworld");
-  return { location: { x: -9, y: 73, z: 1 }, dimension };
+  return { location: world.getDefaultSpawnLocation(), dimension };
 }
 
 export function reviveFromSpectator(player: Player): void {

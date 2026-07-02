@@ -1,6 +1,7 @@
 import {
   world, Player, type Entity, type Container,
   EntityComponentTypes, type EntityInventoryComponent, ItemStack, BlockPermutation,
+  EquipmentSlot, type EntityEquippableComponent,
 } from "@minecraft/server";
 import { removeBalance, addBalance, fmtNC } from "~/common/economy.ts";
 import {
@@ -49,24 +50,25 @@ export function giveItemsToPlayer(player: Player, typeId: string, qty: number): 
   return remaining;
 }
 
-export function getArmorSlot(typeId: string): string | null {
+function getArmorSlot(typeId: string): EquipmentSlot {
   const n = typeId.replace(/^[^:]+:/, "");
-  if (n.includes("helmet"))     return "slot.armor.head";
-  if (n.includes("chestplate")) return "slot.armor.chest";
-  if (n.includes("leggings"))   return "slot.armor.legs";
-  if (n.includes("boots"))      return "slot.armor.feet";
-  return null;
+  if (n.includes("helmet"))     return EquipmentSlot.Head;
+  if (n.includes("chestplate")) return EquipmentSlot.Chest;
+  if (n.includes("leggings"))   return EquipmentSlot.Legs;
+  if (n.includes("boots"))      return EquipmentSlot.Feet;
+  return EquipmentSlot.Mainhand;
 }
 
 export function equipItem(entity: Entity, typeId: string): void {
-  const slot  = getArmorSlot(typeId) ?? "slot.weapon.mainhand";
-  const cmdId = typeId.startsWith("minecraft:") ? typeId.slice(10) : typeId;
-  try { entity.runCommand(`replaceitem entity @s ${slot} 0 ${cmdId} 1`); } catch {}
+  const eq = entity.getComponent(EntityComponentTypes.Equippable) as EntityEquippableComponent | undefined;
+  if (!eq) return;
+  try { eq.setEquipment(getArmorSlot(typeId), new ItemStack(typeId)); } catch {}
 }
 
 export function clearEquip(entity: Entity, typeId: string): void {
-  const slot = getArmorSlot(typeId) ?? "slot.weapon.mainhand";
-  try { entity.runCommand(`replaceitem entity @s ${slot} 0 air`); } catch {}
+  const eq = entity.getComponent(EntityComponentTypes.Equippable) as EntityEquippableComponent | undefined;
+  if (!eq) return;
+  try { eq.setEquipment(getArmorSlot(typeId), undefined); } catch {}
 }
 
 export function isOwnerOrAdmin(player: Player, entity: Entity): boolean {
@@ -78,7 +80,8 @@ export function isInOwnedClaim(playerName: string, x: number, z: number): boolea
   if (typeof raw !== "string") return false;
   interface RawChunk { cx: number; cz: number; w?: number; h?: number; }
   interface RawGroup { owner: string; chunks: RawChunk[]; }
-  const groups: RawGroup[] = JSON.parse(raw);
+  let groups: RawGroup[];
+  try { groups = JSON.parse(raw) as RawGroup[]; } catch { return false; }
   const cx = Math.floor(x / 16), cz = Math.floor(z / 16);
   for (const g of groups) {
     if (g.owner !== playerName) continue;

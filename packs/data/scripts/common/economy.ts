@@ -10,16 +10,36 @@ import {
 const ECONOMY_KEY        = "shuuaddons:eco";
 const ECONOMY_MIRROR_KEY = "shuuaddons:eco_mirror";
 
+let mirrorCache: Record<string, number> | null = null;
+let mirrorDirty = false;
+
 function getMirror(): Record<string, number> {
+  if (mirrorCache) return mirrorCache;
   const raw = world.getDynamicProperty(ECONOMY_MIRROR_KEY);
-  return typeof raw === "string" ? (JSON.parse(raw) as Record<string, number>) : {};
+  try {
+    mirrorCache = typeof raw === "string" ? (JSON.parse(raw) as Record<string, number>) : {};
+  } catch (_) {
+    mirrorCache = {};
+  }
+  return mirrorCache;
 }
 
 function setMirrorEntry(name: string, balance: number): void {
-  const m = getMirror();
-  m[name] = balance;
-  world.setDynamicProperty(ECONOMY_MIRROR_KEY, JSON.stringify(m));
+  getMirror()[name] = balance;
+  mirrorDirty = true;
 }
+
+function flushMirror(): void {
+  if (!mirrorDirty || !mirrorCache) return;
+  const serialized = JSON.stringify(mirrorCache);
+  if (serialized.length > 27856) {
+    world.sendMessage("§c[Shuu] ⚠ eco_mirror proche de la limite de stockage Bedrock !");
+  }
+  world.setDynamicProperty(ECONOMY_MIRROR_KEY, serialized);
+  mirrorDirty = false;
+}
+
+system.runInterval(flushMirror, 200);
 
 export function getBalance(player: Player): number {
   const v = player.getDynamicProperty(ECONOMY_KEY);
@@ -69,6 +89,10 @@ export function removeBalanceByName(name: string, n: number): boolean {
   setBalanceByName(name, cur - n);
   return true;
 }
+
+world.afterEvents.playerLeave.subscribe(() => {
+  flushMirror();
+});
 
 // ── Sync à la connexion (cas où le solde a été modifié hors ligne) ─────────────
 
@@ -164,11 +188,12 @@ system.beforeEvents.startup.subscribe((ev) => {
         if (!sender) return;
         if (montant <= 0) { sender.sendMessage("§cLe montant doit être positif."); return; }
         if (joueur === sender.name) { sender.sendMessage("§cVous ne pouvez pas vous payer vous-même."); return; }
-        if (!removeBalance(sender, montant)) { sender.sendMessage("§cSolde insuffisant."); return; }
-        addBalanceByName(joueur, montant);
-        sender.sendMessage(`§aVous avez envoyé §e${fmtNC(montant)} §aà §e${joueur}§a.`);
         const target = world.getAllPlayers().find((x) => x.name === joueur);
-        target?.sendMessage(`§aVous avez reçu §e${fmtNC(montant)} §ade §e${sender.name}§a.`);
+        if (!target) { sender.sendMessage(`§c${joueur} n'est pas connecté.`); return; }
+        if (!removeBalance(sender, montant)) { sender.sendMessage("§cSolde insuffisant."); return; }
+        addBalance(target, montant);
+        sender.sendMessage(`§aVous avez envoyé §e${fmtNC(montant)} §aà §e${joueur}§a.`);
+        target.sendMessage(`§aVous avez reçu §e${fmtNC(montant)} §ade §e${sender.name}§a.`);
       });
       return { status: CustomCommandStatus.Success };
     },

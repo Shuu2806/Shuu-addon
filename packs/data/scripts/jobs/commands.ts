@@ -1,6 +1,7 @@
 import {
   world,
   system,
+  Player,
   CommandPermissionLevel,
   CustomCommandParamType,
   CustomCommandStatus,
@@ -26,6 +27,20 @@ import { showJobMenu } from "./forms.tsx";
 const CUSTOM_UPGRADES_KEY = "shuuaddons:jobupgrades";
 const CUSTOM_SALARY_KEY   = "shuuaddons:jobsalary";
 const SALARY_CONFIG_KEY   = "shuuaddons:salaryconfig";
+
+function applyJobLevelDelta(admin: Player | undefined, target: Player, job: JobKey, delta: number): void {
+  const d = getJobData(target);
+  const cur = getJobEntry(d, job);
+  const lvl = Math.max(0, Math.min(MAX_LEVEL, cur.lvl + delta));
+  d.jobs[job] = { lvl, xp: 0, acc: 0 };
+  if (!d.active.includes(job)) d.active.push(job);
+  if (d.active.length > d.maxJobs) d.maxJobs = d.active.length;
+  setJobData(target, d);
+  updateScoreboard(target, job, lvl);
+  upsertTopPlayer(target.name, job, lvl);
+  admin?.sendMessage(`§aMétier §e${job} §ade §e${target.name} §a: §e${cur.lvl} → ${lvl}§a.`);
+  target.sendMessage(`§aVotre métier §e${job} §aest passé au niveau §e${lvl}§a.`);
+}
 
 // ── /shuuaddons:jobs ──────────────────────────────────────────────────────────
 
@@ -111,17 +126,7 @@ system.beforeEvents.startup.subscribe((ev) => {
         if (!target) { admin?.sendMessage(`§cJoueur "${joueur}" introuvable.`); return; }
         const job = resolveJob(metier);
         if (!job) { admin?.sendMessage(`§cMétier inconnu. Valeurs : ${JOB_FR_NAMES}`); return; }
-        const d = getJobData(target);
-        const cur = getJobEntry(d, job);
-        const lvl = Math.max(0, Math.min(MAX_LEVEL, cur.lvl + niveau));
-        d.jobs[job] = { lvl, xp: 0, acc: 0 };
-        if (!d.active.includes(job)) d.active.push(job);
-        if (d.active.length > d.maxJobs) d.maxJobs = d.active.length;
-        setJobData(target, d);
-        updateScoreboard(target, job, lvl);
-        upsertTopPlayer(target.name, job, lvl);
-        admin?.sendMessage(`§aMétier §e${job} §ade §e${target.name} §a: §e${cur.lvl} → ${lvl}§a.`);
-        target.sendMessage(`§aVotre métier §e${job} §aest passé au niveau §e${lvl}§a.`);
+        applyJobLevelDelta(admin, target, job, niveau);
       });
       return { status: CustomCommandStatus.Success };
     },
@@ -150,17 +155,7 @@ system.beforeEvents.startup.subscribe((ev) => {
         if (!target) { admin?.sendMessage(`§cJoueur "${joueur}" introuvable.`); return; }
         const job = resolveJob(metier);
         if (!job) { admin?.sendMessage(`§cMétier inconnu. Valeurs : ${JOB_FR_NAMES}`); return; }
-        const d = getJobData(target);
-        const cur = getJobEntry(d, job);
-        const lvl = Math.max(0, Math.min(MAX_LEVEL, cur.lvl - niveau));
-        d.jobs[job] = { lvl, xp: 0, acc: 0 };
-        if (!d.active.includes(job)) d.active.push(job);
-        if (d.active.length > d.maxJobs) d.maxJobs = d.active.length;
-        setJobData(target, d);
-        updateScoreboard(target, job, lvl);
-        upsertTopPlayer(target.name, job, lvl);
-        admin?.sendMessage(`§aMétier §e${job} §ade §e${target.name} §a: §e${cur.lvl} → ${lvl}§a.`);
-        target.sendMessage(`§aVotre métier §e${job} §aest passé au niveau §e${lvl}§a.`);
+        applyJobLevelDelta(admin, target, job, -niveau);
       });
       return { status: CustomCommandStatus.Success };
     },

@@ -1,10 +1,11 @@
-import { world, Player, EntityComponentTypes, ScoreboardIdentityType, type EntityInventoryComponent } from "@minecraft/server";
+import { world, Player, EntityComponentTypes, type EntityInventoryComponent } from "@minecraft/server";
 import { Panel, Screen, render, useEffect, useExit, useState, type JSX } from "@bedrock-core/ui";
+import { useCloseOnHurt } from "../common/use-close-on-hurt.ts";
 import { Scaffold } from "../common/scaffold.tsx";
 import { TitleBar, InfoBox, SaBtn, BG_BODY } from "../common/ui.tsx";
 import { PaginatedList } from "../common/components.tsx";
-import { REVIVE_ITEM, STARTING_LIVES } from "./constants.ts";
-import { getLives, getLivesObjective, setLives, reviveFromSpectator, addPendingLives } from "./helpers.ts";
+import { REVIVE_ITEM } from "./constants.ts";
+import { getLives, setLives, reviveFromSpectator, addPendingLives, getDeadPlayerNames } from "./helpers.ts";
 
 type DeadEntry = { online: true; player: Player } | { online: false; name: string };
 
@@ -22,15 +23,14 @@ function consumeReviveItem(player: Player): void {
 }
 
 export function openReviveForm(player: Player): Promise<void> {
-  const obj = getLivesObjective();
   const onlineNames = new Set(world.getAllPlayers().map(p => p.name));
   const deadPlayers: DeadEntry[] = [
     ...world.getAllPlayers()
       .filter(p => getLives(p) <= 0)
       .map(p => ({ online: true as const, player: p })),
-    ...obj.getParticipants()
-      .filter(id => id.type === ScoreboardIdentityType.Player && !onlineNames.has(id.displayName) && (obj.getScore(id) ?? STARTING_LIVES) <= 0)
-      .map(id => ({ online: false as const, name: id.displayName }))
+    ...getDeadPlayerNames()
+      .filter(name => !onlineNames.has(name))
+      .map(name => ({ online: false as const, name })),
   ];
 
   if (deadPlayers.length === 0) {
@@ -41,6 +41,7 @@ export function openReviveForm(player: Player): Promise<void> {
   return new Promise((resolve) => {
     render(function ReviveForm() {
       const exit = useExit();
+      useCloseOnHurt(player, exit);
       const [target, setTarget] = useState<DeadEntry | null>(null);
 
       useEffect(() => () => { resolve(); }, []);

@@ -1,9 +1,0 @@
-{
-    "ui_defs": [
-        "ui/sa_common.json",
-        "ui/life_ui.json",
-        "ui/jobs_ui.json",
-        "ui/shop_ui.json",
-        "ui/claims_ui.json"
-    ]
-}

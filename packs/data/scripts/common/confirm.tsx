@@ -1,5 +1,6 @@
 import { type Player } from "@minecraft/server";
 import { Button, Panel, Screen, Text, render, useEffect, useExit } from "@bedrock-core/ui";
+import { useCloseOnHurt } from "./use-close-on-hurt.ts";
 
 export function showConfirmForm(
   player: Player,
@@ -11,6 +12,7 @@ export function showConfirmForm(
 
     render(function ConfirmForm() {
       const exit = useExit();
+      useCloseOnHurt(player, exit);
 
       useEffect(() => () => {
         if (!settled) { settled = true; resolve(false); }
