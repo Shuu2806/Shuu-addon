@@ -17,7 +17,7 @@ system.beforeEvents.startup.subscribe((ev) => {
       system.run(() => {
         const player = world.getAllPlayers().find((p) => p.id === origin.sourceEntity?.id);
         if (!player) return;
-        world.sendMessage(`§e${player.name} left the Realm`);
+        world.sendMessage(`§e${player.name} a quitté le Realm`);
       });
       return { status: CustomCommandStatus.Success };
     },

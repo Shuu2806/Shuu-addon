@@ -1,7 +1,6 @@
 import { world, system, Player, EntityComponentTypes, type EntityInventoryComponent } from "@minecraft/server";
 import { addBalance, fmtNC } from "~/common/economy.ts";
 import { getLives } from "~/life/helpers.ts";
-import { onFishCaught } from "~/common/fishing_detection.ts";
 import { JOB_META, type JobKey } from "./constants.ts";
 import {
   getJobData, grantReward, getDefaultReward, getCustomJobReward,
@@ -44,17 +43,25 @@ world.afterEvents.pistonActivate.subscribe((ev) => {
 });
 
 // ── Chasseur ─────────────────────────────────────────────────────────────────
+// Le même kill peut aussi déclencher un bonus "Pêcheur" (créatures aquatiques,
+// cf. jobs_config.ts fisher.tuer) — indépendant du job chasseur, les deux
+// récompenses peuvent s'accorder ensemble sur le même kill si les deux jobs
+// sont actifs.
 
 world.afterEvents.entityDie.subscribe((ev) => {
   const { deadEntity, damageSource } = ev;
   if (deadEntity.typeId === "minecraft:player") return;
   const attacker = damageSource.damagingEntity;
   if (!attacker || attacker.typeId !== "minecraft:player") return;
+  const player = attacker as unknown as Player;
+
   const customR = getCustomJobReward("hunter", deadEntity.typeId);
   const reward = (customR?.category === "tuer" ? customR : null) ?? getDefaultReward("hunter", "tuer", deadEntity.typeId);
-  if (!reward) return;
-  const player = attacker as unknown as Player;
-  system.run(() => grantReward(player, "hunter", reward, deadEntity.typeId));
+  if (reward) system.run(() => grantReward(player, "hunter", reward, deadEntity.typeId));
+
+  const fishCustomR = getCustomJobReward("fisher", deadEntity.typeId);
+  const fishReward = (fishCustomR?.category === "tuer" ? fishCustomR : null) ?? getDefaultReward("fisher", "tuer", deadEntity.typeId);
+  if (fishReward) system.run(() => grantReward(player, "fisher", fishReward, deadEntity.typeId));
 });
 
 // ── Bucheron ──────────────────────────────────────────────────────────────────
@@ -123,38 +130,9 @@ world.afterEvents.playerBreakBlock.subscribe((ev) => {
   });
 });
 
-// ── Pêcheur : récompense sur l'item réellement identifié ────────────────────────
-// L'ancienne détection (fenêtre fixe de 20s après le lancer + diff d'inventaire)
-// ratait les touches lentes, se corrompait dès que la canne elle-même changeait
-// de slot, ET était exploitable : n'importe quel item "pêchable" gagné pendant la
-// fenêtre (ramassé au sol, pris dans un coffre à côté) déclenchait la récompense,
-// peu importe s'il venait vraiment de la pêche. common/fishing_detection.ts
-// identifie maintenant l'item exact via l'entité de loot que le hameçon vanilla
-// fait spawn au moment de la prise (composant "minecraft:loot") — on récompense
-// cet item précis, jamais un diff d'inventaire générique.
-
-// DEBUG temporaire — cf. common/fishing_detection.ts pour le même mécanisme côté détection.
-// const DEBUG_PLAYER_NAME = "Shuu2806";
-function debugMsg(_text: string) {
-  // world.getAllPlayers().find((p) => p.name === DEBUG_PLAYER_NAME)?.sendMessage(`§7[FishDebug] §f${_text}`);
-}
-
-onFishCaught(({ player, item }) => {
-  if (!item) {
-    debugMsg(`[5] onFishCaught reçu mais item NON IDENTIFIÉ — aucune récompense — ${player.name}`);
-    return;
-  }
-  debugMsg(`[5] onFishCaught reçu — item=${item.typeId} x${item.amount} — ${player.name}`);
-
-  const customR = getCustomJobReward("fisher", item.typeId);
-  const reward = (customR?.category === "pecher" ? customR : null) ?? getDefaultReward("fisher", "pecher", item.typeId);
-  if (!reward) {
-    debugMsg(`[6] item pêché (${item.typeId}) mais AUCUNE config de reward trouvée — ${player.name}`);
-    return;
-  }
-  debugMsg(`[7] récompense accordée pour ${item.typeId} (xp=${reward.xp}, nc=${reward.nc}) — ${player.name}`);
-  grantReward(player, "fisher", reward, item.typeId, item.amount);
-});
+// ── Pêcheur ──────────────────────────────────────────────────────────────────
+// La récompense de pêche (et le loot custom) est gérée par common/fishing_loot.ts,
+// seul consommateur de onFishCaught (cf. common/fishing_detection.ts).
 
 // ── Four : XP de cuisson liée à la session d'ouverture du four lui-même ───────
 // L'ancienne détection (changement d'inventaire + fenêtre de temps, avec ou
@@ -215,7 +193,9 @@ world.afterEvents.blockContainerClosed.subscribe((ev) => {
       if (smeltReward) grantReward(player, "miner", smeltReward, typeId, gained);
 
       const fishCuireCustom = getCustomJobReward("fisher", typeId);
-      if (fishCuireCustom?.category === "cuire") grantReward(player, "fisher", fishCuireCustom, typeId, gained);
+      const fishCuireReward = (fishCuireCustom?.category === "cuire" ? fishCuireCustom : null)
+        ?? getDefaultReward("fisher", "cuire", typeId);
+      if (fishCuireReward) grantReward(player, "fisher", fishCuireReward, typeId, gained);
     }
   });
 });

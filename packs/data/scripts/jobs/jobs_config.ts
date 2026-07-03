@@ -140,6 +140,27 @@ export const JOBS_CONFIG: JobsConfig = {
   },
 
   fisher: {
+    // Bonus pour avoir tué une créature aquatique (en plus de la récompense de
+    // prise si elle a été pêchée) — valeurs volontairement plus faibles que la
+    // récompense de pêche, c'est un bonus, pas la récompense principale.
+    tuer: {
+      "minecraft:cod":           { label: "Cabillaud",      xp: 2,  nc: 0.5 },
+      "minecraft:salmon":        { label: "Saumon",         xp: 3,  nc: 0.5 },
+      "minecraft:tropical_fish": { label: "Poisson Tropical", xp: 4, nc: 1  },
+      "minecraft:pufferfish":    { label: "Poisson-Globe",  xp: 5,  nc: 1   },
+      "minecraft:squid":         { label: "Calmar",         xp: 6,  nc: 1   },
+      "minecraft:glow_squid":    { label: "Calmar Luisant", xp: 10, nc: 2   },
+      "minecraft:axolotl":       { label: "Axolotl",        xp: 12, nc: 2.5 },
+      "minecraft:drowned":       { label: "Noyé",           xp: 15, nc: 3   },
+      "minecraft:guardian":      { label: "Gardien",        xp: 25, nc: 5   },
+      "minecraft:dolphin":       { label: "Dauphin",        xp: 35, nc: 6   },
+    },
+    // Cuisson de poisson au four — même principe que le mineur qui gagne à la
+    // fonte des minerais.
+    cuire: {
+      "minecraft:cooked_cod":    { label: "Cabillaud Cuit", xp: 10, nc: 2   },
+      "minecraft:cooked_salmon": { label: "Saumon Cuit",    xp: 12, nc: 2.5 },
+    },
     pecher: {
       // ── Poissons ──────────────────────────────────────────────────────────────
       "minecraft:cod":              { label: "Cabillaud",         xp: 15,  nc: 3   },

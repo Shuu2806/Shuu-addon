@@ -18,6 +18,7 @@ import {
   type JobCategory,
 } from "./helpers.ts";
 import { JOBS_CONFIG, type ConfigEntry } from "./jobs_config.ts";
+import { fishingLootConfig } from "~/common/fishing_loot.ts";
 
 const W  = 280;
 const WC = W - 8;
@@ -33,6 +34,60 @@ type View =
 function fmtNcVal(nc: number): string {
   const t = Math.floor(nc * 100) / 100;
   return t % 1 === 0 ? `${t}` : t.toFixed(2);
+}
+
+// La catégorie "pecher" n'est plus lue depuis JOBS_CONFIG.fisher.pecher : les
+// vraies récompenses viennent maintenant de common/fishing_loot_config.json
+// (seule source utilisée par common/fishing_loot.ts pour accorder XP/NC), donc
+// c'est ce fichier qu'on affiche ici pour rester synchronisé.
+//
+// Retourne plusieurs groupes (pas une seule grosse liste) : la liste "pecher"
+// est désormais bien plus longue que les autres catégories une fois vanilla +
+// items + entités + jackpot cumulés, et un unique panneau géant se fait
+// tronquer silencieusement par le moteur d'UI. Un panneau par groupe évite ça.
+function buildPecherGroups(
+  customs: Record<string, { category: JobCategory; xp: number; nc: number }>,
+): { title: string; lines: string[] }[] {
+  const groups: { title: string; lines: string[] }[] = [];
+  const knownIds = new Set<string>(Object.keys(fishingLootConfig.vanillaItems));
+
+  const vanillaLines: string[] = [];
+  for (const [id, entry] of Object.entries(fishingLootConfig.vanillaItems)) {
+    const ov = customs[id];
+    if (ov?.category === "pecher" && ov.xp === 0 && ov.nc === 0) continue;
+    const eff = (ov?.category === "pecher") ? ov : entry;
+    vanillaLines.push(`§f${entry.label} : §e${eff.xp} XP §8/ §6${fmtNcVal(eff.nc)} NC`);
+  }
+  if (vanillaLines.length > 0) groups.push({ title: "Poissons & Trésors", lines: vanillaLines });
+
+  const specialLines: string[] = [];
+  for (const entry of fishingLootConfig.items) {
+    knownIds.add(entry.id);
+    specialLines.push(`§b${entry.label} : §e${entry.xp} XP §8/ §6${fmtNcVal(entry.nc)} NC`);
+  }
+  if (specialLines.length > 0) groups.push({ title: "Items Spéciaux", lines: specialLines });
+
+  const entityLines: string[] = [];
+  for (const entry of fishingLootConfig.entities) {
+    knownIds.add(entry.id);
+    entityLines.push(`§b${entry.label} : §e${entry.xp} XP §8/ §6${fmtNcVal(entry.nc)} NC`);
+  }
+  if (entityLines.length > 0) groups.push({ title: "Créatures", lines: entityLines });
+
+  const currencyLines: string[] = [];
+  for (const entry of fishingLootConfig.currency) {
+    currencyLines.push(`§6${entry.label} : §e${entry.xp} XP §8/ §6${fmtNcVal(entry.amount)} NC`);
+  }
+  if (currencyLines.length > 0) groups.push({ title: "Jackpot", lines: currencyLines });
+
+  const customLines: string[] = [];
+  for (const [id, r] of Object.entries(customs)) {
+    if (r.category !== "pecher" || (r.xp === 0 && r.nc === 0) || knownIds.has(id)) continue;
+    customLines.push(`§f${id.replace("minecraft:", "")} : §e${r.xp} XP §8/ §6${fmtNcVal(r.nc)} NC`);
+  }
+  if (customLines.length > 0) groups.push({ title: "Bonus Admin", lines: customLines });
+
+  return groups;
 }
 
 export function showJobMenu(player: Player): void {
@@ -213,8 +268,22 @@ export function showJobMenu(player: Player): void {
       const rows: JSX.Element[] = [];
       for (const cat of (["casser", "cuire", "pecher", "tuer"] as JobCategory[])) {
         const baseCat = (jobCfg[cat] ?? {}) as Record<string, ConfigEntry>;
-        const lines: string[] = [];
 
+        if (job === "fisher" && cat === "pecher") {
+          for (const group of buildPecherGroups(customs)) {
+            rows.push(
+              <Panel width={WC} background={BG_PANEL} flexDirection="column" padding={4} gap={2}>
+                {[
+                  <CenteredText scale={0.5}>{`§e§l[Pêcher — ${group.title}]`}</CenteredText>,
+                  ...group.lines.map(l => <CenteredText scale={0.5}>{l}</CenteredText>),
+                ] as unknown as JSX.Element}
+              </Panel>
+            );
+          }
+          continue;
+        }
+
+        const lines: string[] = [];
         for (const [id, entry] of Object.entries(baseCat)) {
           if (id.startsWith("_")) continue;
           const ov = customs[id];
@@ -450,6 +519,21 @@ export function showJobDetail(player: Player, job: JobKey): void {
       const rows: JSX.Element[] = [];
       for (const cat of (["casser", "cuire", "pecher", "tuer"] as JobCategory[])) {
         const baseCat = (jobCfg[cat] ?? {}) as Record<string, ConfigEntry>;
+
+        if (job === "fisher" && cat === "pecher") {
+          for (const group of buildPecherGroups(customs)) {
+            rows.push(
+              <Panel width={WC} background={BG_PANEL} flexDirection="column" padding={4} gap={2}>
+                {[
+                  <CenteredText scale={0.5}>{`§e§l[Pêcher — ${group.title}]`}</CenteredText>,
+                  ...group.lines.map(l => <CenteredText scale={0.5}>{l}</CenteredText>),
+                ] as unknown as JSX.Element}
+              </Panel>
+            );
+          }
+          continue;
+        }
+
         const lines: string[] = [];
         for (const [id, entry] of Object.entries(baseCat)) {
           if (id.startsWith("_")) continue;

@@ -1,6 +1,7 @@
 import "./life/life.ts";
 import "./common/fishing_detection.ts";
 import "./common/fishing_indicator.ts";
+import "./common/fishing_loot.ts";
 import "./jobs/jobs.ts";
 import "./common/economy.ts";
 import "./common/back.ts";

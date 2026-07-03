@@ -4,7 +4,7 @@
 		"name": "pack.name",
 		"description": "pack.description",
 		"uuid": "5b987ade-d265-403c-aa5c-63a049709fcd",
-		"version": [1, 1, 9],
+		"version": [1, 1, 15],
 		"min_engine_version": [1, 21, 80]
 	},
 	"modules": [
@@ -24,7 +24,7 @@
 	"dependencies": [
 		{
 			"uuid": "19e4771a-d4ca-4b51-b182-db67bdaeff1e",
-			"version": [1, 1, 9]
+			"version": [1, 1, 15]
 		},
 		{
 			"module_name": "@minecraft/server",

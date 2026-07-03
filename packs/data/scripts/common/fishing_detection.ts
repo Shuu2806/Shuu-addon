@@ -142,6 +142,11 @@ interface FishingSession {
   isDeeplySubmerged: boolean;
   canBeReeled: boolean;
   caughtItem: CaughtItem | null;
+  // Référence vivante vers l'entité "item" vanilla correspondant à caughtItem,
+  // si la corrélation a réussi. Peut devenir invalide entre la corrélation et
+  // sa consommation (un autre joueur pourrait la ramasser) — toujours vérifier
+  // `.isValid` avant de s'en servir.
+  lootEntity: Entity | null;
   // Tick jusqu'auquel une entité de loot proche doit encore être associée à
   // cette session même si canBeReeled vient d'être remis à false (la prise est
   // déjà confirmée, on attend juste que le loot vanilla apparaisse).
@@ -161,6 +166,7 @@ function getSession(player: Player): FishingSession {
       isDeeplySubmerged: false,
       canBeReeled: false,
       caughtItem: null,
+      lootEntity: null,
       lootCorrelationDeadline: null,
     };
     sessions.set(player.id, session);
@@ -176,6 +182,7 @@ function resetSession(player: Player) {
   session.isDeeplySubmerged = false;
   session.canBeReeled = false;
   session.caughtItem = null;
+  session.lootEntity = null;
   session.lootCorrelationDeadline = null;
 }
 
@@ -208,6 +215,13 @@ export interface FishCaughtEvent {
   // dans ce cas, aucune récompense ne doit être accordée en aval (mieux vaut
   // rater une prise que de laisser un vecteur d'exploit ouvert).
   item: CaughtItem | null;
+  // Référence vivante vers l'entité de loot vanilla correspondant à `item` (null
+  // si `item` est null). Permet à un consommateur de la supprimer pour la
+  // remplacer par un loot custom. Peut être devenue invalide entre-temps
+  // (ramassée par un autre joueur pendant la fenêtre de corrélation) — toujours
+  // vérifier `.isValid` avant tout usage. fishing_detection.ts ne fait qu'exposer
+  // la meilleure référence connue, aucune décision n'est prise ici.
+  lootEntity: Entity | null;
 }
 export interface FishingAfkEvent {
   player: Player;
@@ -382,6 +396,7 @@ function startBiteMonitoring(player: Player) {
       if (session.canBeReeled && isHoldingFishingRod(player) && session.stabilizedLocation) {
         const location = session.stabilizedLocation;
         const itemAtDetection = session.caughtItem;
+        const lootEntityAtDetection = session.lootEntity;
         // La prise est confirmée ici, mais le loot vanilla peut apparaître 1-2
         // ticks plus tard — on garde la fenêtre de corrélation ouverte pour cette
         // session même après avoir remis canBeReeled à false juste en dessous.
@@ -392,11 +407,12 @@ function startBiteMonitoring(player: Player) {
         // avant d'émettre l'évènement avec l'item identifié.
         system.runTimeout(() => {
           const item = session.caughtItem ?? itemAtDetection;
+          const lootEntity = session.lootEntity ?? lootEntityAtDetection ?? null;
           debugMsg(
             `[4] PRISE — item=${item ? `${item.typeId} x${item.amount}` : "NON IDENTIFIÉ"}, ` +
             `chute Y max=${maxDrop.toFixed(3)}m — ${player.name}`,
           );
-          emit(caughtListeners, { player, location, item });
+          emit(caughtListeners, { player, location, item, lootEntity });
         }, 2);
       } else if (!afkTriggered) {
         debugMsg(
@@ -426,6 +442,7 @@ function startBiteMonitoring(player: Player) {
       // second mouvement du bouchon.
       session.canBeReeled = true;
       session.caughtItem = null; // repart de zéro pour cette touche, cf. corrélation du loot plus bas
+      session.lootEntity = null;
       debugMsg(`[3] TOUCHE — fenêtre de ferrage ouverte (profond=${session.isDeeplySubmerged}) — ${player.name}`);
       emit(biteListeners, {
         player,
@@ -533,6 +550,7 @@ function correlateLootItem(itemEntity: Entity) {
     if (!itemComp) continue;
 
     session.caughtItem = { typeId: itemComp.itemStack.typeId, amount: itemComp.itemStack.amount };
+    session.lootEntity = itemEntity;
     debugMsg(
       `[3b] loot identifié près du hameçon : ${session.caughtItem.typeId} x${session.caughtItem.amount} — ${session.player.name}`,
     );

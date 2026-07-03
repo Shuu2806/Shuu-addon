@@ -1,0 +1,66 @@
+{
+  "vanillaWeight": 5000,
+  "vanillaItems": {
+    "minecraft:cod":            { "label": "Cabillaud",         "xp": 30,  "nc": 5   },
+    "minecraft:salmon":         { "label": "Saumon",            "xp": 40,  "nc": 8   },
+    "minecraft:tropical_fish":  { "label": "Poisson Tropical",  "xp": 50,  "nc": 10   },
+    "minecraft:pufferfish":     { "label": "Poisson-Globe",     "xp": 75,  "nc": 15   },
+
+    "minecraft:nautilus_shell": { "label": "Coquille Nautile",  "xp": 100, "nc": 20  },
+    "minecraft:name_tag":       { "label": "Étiquette",         "xp": 150, "nc": 30  },
+    "minecraft:saddle":         { "label": "Selle",             "xp": 100, "nc": 20  },
+    "minecraft:bow":            { "label": "Arc",               "xp": 100,  "nc": 15  },
+    "minecraft:fishing_rod":    { "label": "Canne à Pêche",     "xp": 100,  "nc": 15  },
+    "minecraft:enchanted_book": { "label": "Livre Enchanté",    "xp": 200, "nc": 50  },
+
+    "minecraft:lily_pad":       { "label": "Nénuphar",          "xp": 20,   "nc": 2 },
+    "minecraft:bowl":           { "label": "Bol",               "xp": 10,   "nc": 1 },
+    "minecraft:leather":        { "label": "Cuir",              "xp": 20,   "nc": 2 },
+    "minecraft:leather_boots":  { "label": "Bottes en Cuir",    "xp": 50,   "nc": 3 },
+    "minecraft:rotten_flesh":   { "label": "Chair Putride",     "xp": 5,   "nc": 1 },
+    "minecraft:stick":          { "label": "Bâton",             "xp": 5,   "nc": 1 },
+    "minecraft:string":         { "label": "Ficelle",           "xp": 5,   "nc": 1 },
+    "minecraft:bone":           { "label": "Os",                "xp": 5,   "nc": 1 },
+    "minecraft:ink_sac":        { "label": "Sac d'Encre",       "xp": 10,   "nc": 2   },
+    "minecraft:tripwire_hook":  { "label": "Crochet de Fil",    "xp": 10,   "nc": 2 },
+    "minecraft:potion":         { "label": "Bouteille d'Eau",   "xp": 10,   "nc": 1 },
+    "minecraft:glass_bottle":   { "label": "Bouteille Vide",    "xp": 5,    "nc": 1 }
+  },
+  "items": [
+    { "id": "minecraft:diamond",             "weight": 40, "amount": 1, "label": "Diamant",              "xp": 70,  "nc": 12  },
+    { "id": "minecraft:diamond_block",       "weight": 2,  "amount": 1, "label": "Bloc de Diamant",       "xp": 600, "nc": 100 },
+    { "id": "minecraft:emerald",             "weight": 45, "amount": 1, "label": "Émeraude",              "xp": 55,  "nc": 9   },
+    { "id": "minecraft:emerald_block",       "weight": 3,  "amount": 1, "label": "Bloc d'Émeraude",       "xp": 450, "nc": 75  },
+    { "id": "minecraft:prismarine_shard",    "weight": 70, "amount": 2, "label": "Prismarine",            "xp": 25,  "nc": 4   },
+    { "id": "minecraft:prismarine_crystals", "weight": 55, "amount": 1, "label": "Cristaux de Prismarine","xp": 35,  "nc": 6   },
+    { "id": "minecraft:tube_coral_block",    "weight": 12, "amount": 1, "label": "Bloc de Corail Tube",    "xp": 40,  "nc": 7   },
+    { "id": "minecraft:brain_coral_block",   "weight": 12, "amount": 1, "label": "Bloc de Corail Cerveau", "xp": 40,  "nc": 7   },
+    { "id": "minecraft:bubble_coral_block",  "weight": 12, "amount": 1, "label": "Bloc de Corail Bulle",   "xp": 40,  "nc": 7   },
+    { "id": "minecraft:fire_coral_block",    "weight": 12, "amount": 1, "label": "Bloc de Corail Feu",     "xp": 40,  "nc": 7   },
+    { "id": "minecraft:horn_coral_block",    "weight": 12, "amount": 1, "label": "Bloc de Corail Corne",   "xp": 40,  "nc": 7   },
+    { "id": "minecraft:prismarine",          "weight": 35, "amount": 1, "label": "Bloc de Prismarine",    "xp": 30,  "nc": 5   },
+    { "id": "minecraft:kelp",                "weight": 90, "amount": 3, "label": "Algues",                "xp": 8,   "nc": 1   },
+
+    { "id": "minecraft:scute",               "weight": 20, "amount": 1, "label": "Écaille de Tortue",     "xp": 45,  "nc": 8   },
+    { "id": "minecraft:sponge",              "weight": 15, "amount": 1, "label": "Éponge",                "xp": 50,  "nc": 9   },
+    { "id": "minecraft:amethyst_shard",      "weight": 25, "amount": 2, "label": "Éclat d'Améthyste",     "xp": 35,  "nc": 6   },
+    { "id": "minecraft:heart_of_the_sea",    "weight": 1,  "amount": 1, "label": "Cœur de la Mer",        "xp": 800, "nc": 150 },
+    { "id": "minecraft:trident",             "weight": 1,  "amount": 1, "label": "Trident",               "xp": 700, "nc": 130 }
+  ],
+  "entities": [
+    { "id": "minecraft:cod",           "weight": 125, "label": "Cabillaud",        "xp": 70,  "nc": 12   },
+    { "id": "minecraft:salmon",        "weight": 100, "label": "Saumon",           "xp": 75,  "nc": 13   },
+    { "id": "minecraft:pufferfish",    "weight": 75, "label": "Poisson-Globe",  "xp": 100,  "nc": 20   },
+    { "id": "minecraft:squid",         "weight": 50, "label": "Calmar",                  "xp": 150,  "nc": 25  },
+    { "id": "minecraft:glow_squid",    "weight": 25, "label": "Calmar Luisant",          "xp": 200, "nc": 30  },
+    { "id": "minecraft:axolotl",       "weight": 12, "label": "Axolotl",                 "xp": 250, "nc": 40  },
+    { "id": "minecraft:drowned",       "weight": 6, "label": "Noyé",   "xp": 300, "nc": 45  },
+    { "id": "minecraft:guardian",      "weight": 3, "label": "Gardien",                 "xp": 500, "nc": 90  },
+    { "id": "minecraft:dolphin",       "weight": 2, "label": "Dauphin",                 "xp": 1000, "nc": 120 }
+  ],
+  "currency": [
+    { "amount": 250, "weight": 3, "label": "Trésor englouti", "xp": 300 },
+    { "amount": 500, "weight": 2, "label": "Trésor englouti", "xp": 900 },
+    { "amount": 1000, "weight": 1, "label": "Trésor englouti", "xp": 3000 }
+  ]
+}
