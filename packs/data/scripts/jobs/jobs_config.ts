@@ -136,7 +136,6 @@ export const JOBS_CONFIG: JobsConfig = {
       "minecraft:melon_block":      { label: "Melon",            xp: 12,  nc: 0.5 },
       "minecraft:pumpkin":          { label: "Citrouille",       xp: 12,  nc: 0.5 },
       "minecraft:reeds":            { label: "Canne à Sucre",    xp: 6,  nc: 0.3 },
-      "minecraft:bamboo":           { label: "Bambou",           xp: 4,  nc: 0.3 },
     },
   },
 
